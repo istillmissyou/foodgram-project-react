@@ -5,11 +5,13 @@ from django.db.models import (CASCADE, CharField, ForeignKey, ImageField,
                               PositiveSmallIntegerField, SlugField, TextField,
                               UniqueConstraint)
 
+from foodgram.settings import MAX_LEN_CHARFIELD
+
 User = get_user_model()
 
 
 class Tag(Model):
-    name = CharField(max_length=200, unique=True,)
+    name = CharField(max_length=MAX_LEN_CHARFIELD, unique=True)
     color = CharField(
         verbose_name='Цветовой HEX-код',
         max_length=6,
@@ -24,15 +26,15 @@ class Tag(Model):
 
 
 class Ingredient(Model):
-    name = CharField(max_length=200)
-    measurement_unit = CharField(max_length=200)
+    name = CharField(max_length=MAX_LEN_CHARFIELD)
+    measurement_unit = CharField(max_length=MAX_LEN_CHARFIELD)
 
     class Meta:
         ordering = ['name']
 
 
 class Recipe(Model):
-    tags = ManyToManyField(Tag, related_name='recipes',)
+    tags = ManyToManyField(Tag, related_name='recipes')
     author = ForeignKey(
         User,
         on_delete=CASCADE,
@@ -42,17 +44,15 @@ class Recipe(Model):
         Ingredient,
         through='recipes.AmountIngredient',
     )
-    is_favorited = ManyToManyField(User, related_name='favorites',)
-    is_in_shopping_cart = ManyToManyField(User, related_name='carts',)
+    is_favorited = ManyToManyField(User, related_name='favorites')
+    is_in_shopping_cart = ManyToManyField(User, related_name='carts')
     image = ImageField(upload_to='recipes')
     name = CharField(max_length=200)
     text = TextField()
     cooking_time = PositiveSmallIntegerField(
         default=0,
-        validators=(
-            MinValueValidator(1, 'Одно мгновенье!'),
-            MaxValueValidator(600, 'Очень долго...'),
-        ),
+        validators=(MinValueValidator(1, 'Одно мгновенье!'),
+                    MaxValueValidator(600, 'Очень долго...'),),
     )
 
 
