@@ -1,10 +1,9 @@
 from django.contrib.auth import get_user_model
 from django.core.validators import MaxValueValidator, MinValueValidator
-from django.db.models import (CASCADE, CharField, ForeignKey, ImageField,
-                              ManyToManyField, Model,
+from django.db.models import (CASCADE, CharField, DateTimeField, ForeignKey,
+                              ImageField, ManyToManyField, Model,
                               PositiveSmallIntegerField, SlugField, TextField,
                               UniqueConstraint)
-
 from foodgram.settings import MAX_LEN_RECIPES_CHARFIELD
 
 User = get_user_model()
@@ -24,6 +23,9 @@ class Tag(Model):
     class Meta:
         ordering = ['name']
 
+    def __str__(self):
+        return f'{self.name} (цвет: {self.color})'
+
 
 class Ingredient(Model):
     name = CharField(max_length=MAX_LEN_RECIPES_CHARFIELD)
@@ -31,6 +33,9 @@ class Ingredient(Model):
 
     class Meta:
         ordering = ['name']
+
+    def __str__(self):
+        return f'{self.name} {self.measurement_unit}'
 
 
 class Recipe(Model):
@@ -54,6 +59,17 @@ class Recipe(Model):
         validators=(MinValueValidator(1, 'Одно мгновенье!'),
                     MaxValueValidator(600, 'Очень долго...'),),
     )
+    pub_date = DateTimeField(
+        verbose_name='Дата публикации',
+        auto_now_add=True,
+    )
+
+    class Meta:
+        ordering = ['-pub_date']
+        constraints = (UniqueConstraint(fields=('name', 'author')))
+
+    def __str__(self):
+        return f'{self.name}. Автор: {self.author.username}'
 
 
 class AmountIngredient(Model):
@@ -76,7 +92,11 @@ class AmountIngredient(Model):
     )
 
     class Meta:
+        ordering = ['recipe']
         constraints = [
             UniqueConstraint(fields=['recipe', 'ingredient'],
                              name='amount_ingredient')
         ]
+
+    def __str__(self) -> str:
+        return f'{self.amount} {self.ingredient}'
