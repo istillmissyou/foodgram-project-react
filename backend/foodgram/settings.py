@@ -18,8 +18,11 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
+    'rest_framework',
+    'django_filters',
     'recipes',
     'api',
+    'rest_framework_simplejwt',
 ]
 
 MIDDLEWARE = [
@@ -78,6 +81,8 @@ AUTH_PASSWORD_VALIDATORS = [
     },
 ]
 
+AUTH_USER_MODEL = 'users.User'
+
 
 # Internationalization
 LANGUAGE_CODE = 'en-us'
@@ -99,4 +104,6 @@ MEDIA_URL = '/media/'
 MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
 
 # Constants
-MAX_LEN_CHARFIELD = 200
+MAX_LEN_RECIPES_CHARFIELD = 200
+MAX_LEN_USERS_CHARFIELD = 200
+MIN_LEN_USERNAME = 3
