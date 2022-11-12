@@ -1,7 +1,6 @@
 from django.contrib.auth.models import AbstractUser
-from django.db.models import (CharField, CheckConstraint, EmailField,
-                              ManyToManyField, Q)
-from foodgram.settings import MAX_LEN_USERS_CHARFIELD, MIN_LEN_USERNAME
+from django.db.models import CharField, EmailField, ManyToManyField
+from foodgram.settings import MAX_LEN_USERS_CHARFIELD
 
 
 class User(AbstractUser):
@@ -10,13 +9,14 @@ class User(AbstractUser):
     first_name = CharField(max_length=MAX_LEN_USERS_CHARFIELD)
     last_name = CharField(max_length=MAX_LEN_USERS_CHARFIELD)
     password = CharField(max_length=MAX_LEN_USERS_CHARFIELD)
-    is_subscribed = ManyToManyField(to='self', symmetrical=False)
+    is_subscribed = ManyToManyField(
+        to='self',
+        symmetrical=False,
+        related_name='subscribes',
+    )
 
     class Meta:
         ordering = ['username']
-        constraints = (
-            CheckConstraint(check=Q(username__length__gte=MIN_LEN_USERNAME))
-        )
 
     def __str__(self):
         return f'{self.username}: {self.email}'

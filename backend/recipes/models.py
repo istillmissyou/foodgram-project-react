@@ -10,15 +10,19 @@ User = get_user_model()
 
 
 class Tag(Model):
-    name = CharField(max_length=MAX_LEN_RECIPES_CHARFIELD, unique=True)
+    name = CharField(
+        max_length=MAX_LEN_RECIPES_CHARFIELD,
+        unique=True,
+    )
     color = CharField(
         verbose_name='Цветовой HEX-код',
         max_length=6,
-        blank=True,
-        null=True,
+        unique=True,
         default='FF',
     )
-    slug = SlugField(unique=True)
+    slug = SlugField(
+        unique=True,
+    )
 
     class Meta:
         ordering = ['name']
@@ -39,7 +43,10 @@ class Ingredient(Model):
 
 
 class Recipe(Model):
-    tags = ManyToManyField(Tag, related_name='recipes')
+    tags = ManyToManyField(
+        Tag,
+        related_name='recipes',
+    )
     author = ForeignKey(
         User,
         on_delete=CASCADE,
@@ -47,17 +54,26 @@ class Recipe(Model):
     )
     ingredients = ManyToManyField(
         Ingredient,
+        related_name='recipes',
         through='recipes.AmountIngredient',
     )
-    is_favorited = ManyToManyField(User, related_name='favorites')
-    is_in_shopping_cart = ManyToManyField(User, related_name='carts')
+    is_favorited = ManyToManyField(
+        User,
+        related_name='favorites',
+    )
+    is_in_shopping_cart = ManyToManyField(
+        User,
+        related_name='carts',
+    )
     image = ImageField(upload_to='recipes')
     name = CharField(max_length=MAX_LEN_RECIPES_CHARFIELD)
     text = TextField()
     cooking_time = PositiveSmallIntegerField(
         default=0,
-        validators=(MinValueValidator(1, 'Одно мгновенье!'),
-                    MaxValueValidator(600, 'Очень долго...'),),
+        validators=(
+            MinValueValidator(1),
+            MaxValueValidator(600),
+        ),
     )
     pub_date = DateTimeField(
         verbose_name='Дата публикации',
@@ -66,7 +82,10 @@ class Recipe(Model):
 
     class Meta:
         ordering = ['-pub_date']
-        constraints = (UniqueConstraint(fields=('name', 'author')))
+        UniqueConstraint(
+                fields=('name', 'author'),
+                name='unique_for_author'
+            )
 
     def __str__(self):
         return f'{self.name}. Автор: {self.author.username}'
@@ -86,16 +105,21 @@ class AmountIngredient(Model):
     amount = PositiveSmallIntegerField(
         default=0,
         validators=(
-            MinValueValidator(1, 'Хоть что-то'),
-            MaxValueValidator(10000, 'Слишком много!'),
+            MinValueValidator(1),
+            MaxValueValidator(10000),
         ),
     )
 
     class Meta:
         ordering = ['recipe']
         constraints = [
-            UniqueConstraint(fields=['recipe', 'ingredient'],
-                             name='amount_ingredient')
+            UniqueConstraint(
+                fields=[
+                    'recipe',
+                    'ingredient',
+                ],
+                name='amount_ingredient',
+            ),
         ]
 
     def __str__(self) -> str:
