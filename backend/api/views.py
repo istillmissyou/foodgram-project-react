@@ -66,12 +66,12 @@ class RecipeViewSet(ModelViewSet):
             return queryset
         if is_in_shopping in true_search:
             return queryset.filter(cart=user.id)
-        elif is_in_shopping in false_search:
+        if is_in_shopping in false_search:
             return queryset.exclude(cart=user.id)
 
         if is_favorited in true_search:
             return queryset.filter(favorite=user.id)
-        elif is_favorited in false_search:
+        if is_favorited in false_search:
             return queryset.exclude(favorite=user.id)
         return queryset
 
