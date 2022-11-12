@@ -78,8 +78,8 @@ jobs:
           sudo docker image pull ${{ secrets.DOCKER_USERNAME }}/foodgram_back
           sudo docker image pull ${{ secrets.DOCKER_USERNAME }}/foodgram_front
           sudo docker-compose stop
-          sudo docker rm foodgram_frontend_1
-          sudo docker rm foodgram_backend_1
+          sudo docker rm frontend
+          sudo docker rm backend
           touch .env
           echo SECRET_KEY=${{ secrets.SECRET_KEY }} >> .env
           echo DB_ENGINE=${{ secrets.DB_ENGINE }} >> .env
