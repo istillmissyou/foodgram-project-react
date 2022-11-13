@@ -1,12 +1,37 @@
-from django.contrib.auth import get_user_model
+from django.contrib.auth.models import AbstractUser
 from django.core.validators import MaxValueValidator, MinValueValidator
-from django.db.models import (CASCADE, CharField, DateTimeField, ForeignKey,
+from django.db.models import (CASCADE, CharField, CheckConstraint,
+                              DateTimeField, EmailField, ForeignKey,
                               ImageField, ManyToManyField, Model,
-                              PositiveSmallIntegerField, SlugField, TextField,
-                              UniqueConstraint)
-from foodgram.settings import MAX_LEN_RECIPES_CHARFIELD
+                              PositiveSmallIntegerField, Q, SlugField,
+                              TextField, UniqueConstraint)
+from foodgram.settings import (MAX_LEN_RECIPES_CHARFIELD,
+                               MAX_LEN_USERS_CHARFIELD, MIN_LEN_USERNAME)
 
-User = get_user_model()
+
+class User(AbstractUser):
+    email = EmailField(max_length=254, unique=True)
+    username = CharField(max_length=MAX_LEN_USERS_CHARFIELD, unique=True)
+    first_name = CharField(max_length=MAX_LEN_USERS_CHARFIELD)
+    last_name = CharField(max_length=MAX_LEN_USERS_CHARFIELD)
+    password = CharField(max_length=MAX_LEN_USERS_CHARFIELD)
+    is_subscribed = ManyToManyField(
+        to='self',
+        symmetrical=False,
+        related_name='subscribes',
+    )
+
+    class Meta:
+        ordering = ['username']
+        constraints = (
+            CheckConstraint(
+                check=Q(username__length__gte=MIN_LEN_USERNAME),
+                name='\nusername too short\n',
+            ),
+        )
+
+    def __str__(self):
+        return f'{self.username}: {self.email}'
 
 
 class Tag(Model):
