@@ -1,9 +1,6 @@
-version: '3.3'
+version: '3.8'
 services:
-  frontend:
-    image: ssd256/foodgram_front:latest
-    volumes:
-      - ../frontend/:/app/result_build/
+
   db:
     image: postgres:13.0-alpine
     restart: always
@@ -11,6 +8,7 @@ services:
       - postgres_data:/var/lib/postgresql/data/
     env_file:
       - ./.env
+
   backend:
     image: ssd256/foodgram_back:latest
     restart: always
@@ -21,8 +19,16 @@ services:
       - db
     env_file:
       - ./.env
+
+  frontend:
+    image: ssd256/foodgram_front:latest
+    volumes:
+      - ../frontend/:/app/result_build/
+    depends_on:
+      - backend
+
   nginx:
-    image: nginx:1.19.3
+    image: nginx:1.21.3-alpine
     ports:
       - "80:80"
     volumes:
@@ -32,7 +38,7 @@ services:
       - static_value:/var/html/static/
       - media_value:/var/html/media/
     depends_on:
-      - backend
+      - frontend
 
 volumes:
   static_value:
