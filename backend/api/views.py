@@ -3,21 +3,46 @@ from urllib.parse import unquote
 
 from django.db.models import F, Sum
 from django.http.response import HttpResponse
+from djoser.views import UserViewSet
 from foodgram.settings import DATE_TIME_FORMAT
 from recipes.models import AmountIngredient, Ingredient, Recipe, Tag
 from rest_framework.decorators import action
 from rest_framework.response import Response
-from rest_framework.status import HTTP_400_BAD_REQUEST
+from rest_framework.status import HTTP_400_BAD_REQUEST, HTTP_401_UNAUTHORIZED
 from rest_framework.viewsets import ModelViewSet, ReadOnlyModelViewSet
 
+from .mixins import AddDelViewMixin
+from .paginators import PageLimitPagination
 from .permissions import IsAdminOrReadOnly, IsAuthorOrAdminOrModerator
-from .serializers import IngredientSerializer, RecipeSerializer, TagSerializer
+from .serializers import (IngredientSerializer, RecipeSerializer,
+                          TagSerializer, UserSubscribeSerializer)
 
 
 class TagViewSet(ReadOnlyModelViewSet):
     queryset = Tag.objects.all()
     serializer_class = TagSerializer
     permission_classes = [IsAdminOrReadOnly]
+
+
+class CustomUserViewSet(UserViewSet, AddDelViewMixin):
+    pagination_class = PageLimitPagination
+    add_serializer = UserSubscribeSerializer
+
+    @action(methods=('get', 'post'), detail=True)
+    def subscribe(self, request, id):
+        return self.add_del_obj(id, 'subscribe')
+
+    @action(methods=('get',), detail=False)
+    def subscriptions(self, request):
+        user = self.request.user
+        if user.is_anonymous:
+            return Response(status=HTTP_401_UNAUTHORIZED)
+        authors = user.subscribe.all()
+        pages = self.paginate_queryset(authors)
+        serializer = UserSubscribeSerializer(
+            pages, many=True, context={'request': request}
+        )
+        return self.get_paginated_response(serializer.data)
 
 
 class IngredientViewSet(ReadOnlyModelViewSet):
@@ -65,14 +90,14 @@ class RecipeViewSet(ModelViewSet):
         if user.is_anonymous:
             return queryset
         if is_in_shopping in true_search:
-            return queryset.filter(cart=user.id)
+            queryset = queryset.filter(cart=user.id)
         if is_in_shopping in false_search:
-            return queryset.exclude(cart=user.id)
+            queryset = queryset.exclude(cart=user.id)
 
         if is_favorited in true_search:
-            return queryset.filter(favorite=user.id)
+            queryset = queryset.filter(favorite=user.id)
         if is_favorited in false_search:
-            return queryset.exclude(favorite=user.id)
+            queryset = queryset.exclude(favorite=user.id)
         return queryset
 
     @action(methods=('get', 'post', 'delete',), detail=True)
