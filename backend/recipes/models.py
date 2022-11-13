@@ -1,10 +1,12 @@
 from django.contrib.auth.models import AbstractUser
 from django.core.validators import MaxValueValidator, MinValueValidator
-from django.db.models import (CASCADE, CharField, DateTimeField, EmailField,
-                              ForeignKey, ImageField, ManyToManyField, Model,
-                              PositiveSmallIntegerField, SlugField, TextField,
-                              UniqueConstraint, CheckConstraint, Q)
+from django.db.models import (CASCADE, CharField, CheckConstraint,
+                              DateTimeField, EmailField, ForeignKey,
+                              ImageField, ManyToManyField, Model,
+                              PositiveSmallIntegerField, Q, SlugField,
+                              TextField, UniqueConstraint)
 from django.db.models.functions import Length
+
 from foodgram.settings import (MAX_LEN_RECIPES_CHARFIELD,
                                MAX_LEN_USERS_CHARFIELD, MIN_LEN_USERNAME)
 
