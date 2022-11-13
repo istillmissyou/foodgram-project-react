@@ -1,11 +1,9 @@
 version: '3.3'
 services:
-
   frontend:
     image: ssd256/foodgram_front:latest
     volumes:
       - ../frontend/:/app/result_build/
-
   db:
     image: postgres:13.0-alpine
     restart: always
@@ -13,12 +11,11 @@ services:
       - postgres_data:/var/lib/postgresql/data/
     env_file:
       - ./.env
-
   backend:
     image: ssd256/foodgram_back:latest
     restart: always
     command: >
-      bash -c "python manage.py makemigrations users &&
+      bash -c "python manage.py makemigrations &&
       python manage.py migrate &&
       python manage.py collectstatic --noinput &&
       gunicorn --bind 0:8000 foodgram.wsgi"
@@ -29,7 +26,6 @@ services:
       - db
     env_file:
       - ./.env
-
   nginx:
     image: nginx:1.19.3
     ports:
