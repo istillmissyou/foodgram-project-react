@@ -60,16 +60,6 @@ TEMPLATES = [
 
 WSGI_APPLICATION = 'foodgram.wsgi.application'
 
-REST_FRAMEWORK = {
-    'DEFAULT_PERMISSION_CLASSES': [
-        'rest_framework.permissions.IsAuthenticated',
-    ],
-
-    'DEFAULT_AUTHENTICATION_CLASSES': [
-        'rest_framework.authentication.TokenAuthentication',
-    ]
-}
-
 
 # Database
 DATABASES = {
@@ -138,7 +128,7 @@ DJOSER = {
     'LOGIN_FIELD': 'email',
     'HIDE_USERS': False,
     'PERMISSIONS': {
-        'resipe': ('api.permissions.AuthorStaffOrReadOnly,',),
+        'recipe': ('api.permissions.AuthorStaffOrReadOnly,',),
         'recipe_list': ('api.permissions.AuthorStaffOrReadOnly',),
         'user': ('api.permissions.OwnerUserOrReadOnly',),
         'user_list': ('api.permissions.OwnerUserOrReadOnly',),
