@@ -6,7 +6,6 @@ from django.db.models import (CASCADE, CharField, CheckConstraint,
                               PositiveSmallIntegerField, Q, SlugField,
                               TextField, UniqueConstraint)
 from django.db.models.functions import Length
-
 from foodgram.settings import (MAX_LEN_RECIPES_CHARFIELD,
                                MAX_LEN_USERS_CHARFIELD, MIN_LEN_USERNAME)
 
@@ -44,7 +43,7 @@ class Tag(Model):
         unique=True,
     )
     color = CharField(
-        verbose_name='Цветовой HEX-код',
+        verbose_name='Цветовой HEX-код.',
         max_length=6,
         unique=True,
         default='FF',
