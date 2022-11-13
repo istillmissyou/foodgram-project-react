@@ -135,7 +135,7 @@ class AmountIngredient(Model):
 
     class Meta:
         ordering = ['recipe']
-        constraints = [
+        constraints = (
             UniqueConstraint(
                 fields=[
                     'recipe',
@@ -143,7 +143,7 @@ class AmountIngredient(Model):
                 ],
                 name='amount_ingredient',
             ),
-        ]
+        )
 
     def __str__(self) -> str:
         return f'{self.amount} {self.ingredient}'
