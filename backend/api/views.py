@@ -90,14 +90,15 @@ class RecipeViewSet(ModelViewSet):
         if user.is_anonymous:
             return queryset
         if is_in_shopping in true_search:
-            return queryset.filter(cart=user.id)
+            queryset = queryset.filter(cart=user.id)
         if is_in_shopping in false_search:
-            return queryset.exclude(cart=user.id)
+            queryset = queryset.exclude(cart=user.id)
 
         if is_favorited in true_search:
-            return queryset.filter(favorite=user.id)
+            queryset = queryset.filter(favorite=user.id)
         if is_favorited in false_search:
-            return queryset.exclude(favorite=user.id)
+            queryset = queryset.exclude(favorite=user.id)
+        return queryset
 
     @action(methods=('get', 'post', 'delete',), detail=True)
     def favorite(self, request, pk):
