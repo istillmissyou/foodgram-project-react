@@ -6,6 +6,9 @@ from django.db.models import (CASCADE, CharField, DateTimeField, EmailField,
                               UniqueConstraint)
 from foodgram.settings import (MAX_LEN_RECIPES_CHARFIELD,
                                MAX_LEN_USERS_CHARFIELD)
+from django.db.models.functions import Length
+
+CharField.register_lookup(Length)
 
 
 class User(AbstractUser):
