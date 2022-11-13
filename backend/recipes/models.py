@@ -82,9 +82,11 @@ class Recipe(Model):
 
     class Meta:
         ordering = ['-pub_date']
-        constraints = UniqueConstraint(
-            fields=('name', 'author'),
-            name='unique_for_author'
+        constraints = (
+            UniqueConstraint(
+                fields=('name', 'author'),
+                name='unique_for_author'
+            ),
         )
 
     def __str__(self):
