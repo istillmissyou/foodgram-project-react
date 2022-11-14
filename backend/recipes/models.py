@@ -19,7 +19,7 @@ class User(AbstractUser):
     first_name = CharField(max_length=MAX_LEN_USERS_CHARFIELD)
     last_name = CharField(max_length=MAX_LEN_USERS_CHARFIELD)
     password = CharField(max_length=MAX_LEN_USERS_CHARFIELD)
-    is_subscribed = ManyToManyField(
+    subscribe = ManyToManyField(
         to='self',
         symmetrical=False,
         related_name='subscribes',
@@ -86,16 +86,19 @@ class Recipe(Model):
         related_name='recipes',
         through='recipes.AmountIngredient',
     )
-    is_favorited = ManyToManyField(
+    favorite = ManyToManyField(
         User,
         related_name='favorites',
     )
-    is_in_shopping_cart = ManyToManyField(
+    cart = ManyToManyField(
         User,
         related_name='carts',
     )
     image = ImageField(upload_to='recipes')
-    name = CharField(max_length=MAX_LEN_RECIPES_CHARFIELD)
+    name = CharField(
+        max_length=MAX_LEN_RECIPES_CHARFIELD,
+        upload_to='recipe',
+    )
     text = TextField()
     cooking_time = PositiveSmallIntegerField(
         default=0,
@@ -105,7 +108,6 @@ class Recipe(Model):
         ),
     )
     pub_date = DateTimeField(
-        verbose_name='Дата публикации',
         auto_now_add=True,
     )
 
@@ -128,7 +130,7 @@ class AmountIngredient(Model):
         on_delete=CASCADE,
         related_name='ingredient',
     )
-    ingredient = ForeignKey(
+    ingredients = ForeignKey(
         Ingredient,
         on_delete=CASCADE,
         related_name='recipe',
@@ -154,4 +156,4 @@ class AmountIngredient(Model):
         )
 
     def __str__(self) -> str:
-        return f'{self.amount} {self.ingredient}'
+        return f'{self.amount} {self.ingredients}'
