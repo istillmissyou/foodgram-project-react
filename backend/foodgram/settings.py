@@ -12,8 +12,6 @@ DEBUG = False
 
 ALLOWED_HOSTS = ['*']
 
-
-# Application definition
 INSTALLED_APPS = [
     'django.contrib.admin',
     'django.contrib.auth',
@@ -60,8 +58,6 @@ TEMPLATES = [
 
 WSGI_APPLICATION = 'foodgram.wsgi.application'
 
-
-# Database
 DATABASES = {
     'default': {
         'ENGINE': os.getenv('DB_ENGINE', default='django.db.backends.postgresql'),
@@ -73,8 +69,6 @@ DATABASES = {
     }
 }
 
-
-# Password validation
 AUTH_PASSWORD_VALIDATORS = [
     {
         'NAME': 'django.contrib.auth.password_validation.UserAttributeSimilarityValidator',
@@ -94,8 +88,6 @@ DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
 AUTH_USER_MODEL = 'recipes.User'
 
-
-# Internationalization
 LANGUAGE_CODE = 'en-us'
 
 TIME_ZONE = 'UTC'
@@ -106,16 +98,12 @@ USE_L10N = True
 
 USE_TZ = True
 
-
-# Static files (CSS, JavaScript, Images)
 STATIC_URL = '/static/'
 STATIC_ROOT = os.path.join(BASE_DIR, 'static')
 
 MEDIA_URL = '/media/'
 MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
 
-
-# REST_FRAMEWORK
 REST_FRAMEWORK = {
     'DEFAULT_AUTHENTICATION_CLASSES':
     ['rest_framework.authentication.TokenAuthentication', ],
@@ -141,8 +129,6 @@ DJOSER = {
     },
 }
 
-
-# Constants
 MAX_LEN_RECIPES_CHARFIELD = 200
 MAX_LEN_USERS_CHARFIELD = 120
 MIN_LEN_USERNAME = 3
