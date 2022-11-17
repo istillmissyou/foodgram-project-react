@@ -1,11 +1,11 @@
 from string import hexdigits
 
 from django.db.models import F
+from django.shortcuts import get_object_or_404
 from drf_extra_fields.fields import Base64ImageField
+from recipes.models import AmountIngredient, Ingredient, Recipe, Tag, User
 from rest_framework.serializers import (ModelSerializer, SerializerMethodField,
                                         ValidationError)
-
-from recipes.models import AmountIngredient, Ingredient, Recipe, Tag, User
 
 
 class TagSerializer(ModelSerializer):
@@ -89,9 +89,6 @@ class UserSubscribeSerializer(UserSerializer):
         )
         read_only_fields = '__all__'
 
-    def get_is_subscribed(*args):
-        return True
-
     def get_recipes_count(self, obj):
         return obj.recipes.count()
 
@@ -123,6 +120,19 @@ class RecipeSerializer(ModelSerializer):
             'is_shopping_cart',
         )
 
+    def validate(self, data):
+        ingredients = self.initial_data.get('ingredients')
+        ingredients_set = set()
+        for ingredient in ingredients:
+            id = ingredient.get('id')
+            if id in ingredients_set:
+                raise ValidationError(
+                    'Ингредиент в рецепте не должен повторяться.'
+                )
+            ingredients_set.add(id)
+        data['ingredients'] = ingredients
+        return data
+
     def get_ingredients(self, obj):
         return obj.ingredients.values(
             'id', 'name', 'measurement_unit',
@@ -141,41 +151,33 @@ class RecipeSerializer(ModelSerializer):
             return False
         return user.carts.filter(id=obj.id).exists()
 
-    def create(self, validated_data):
-        image = validated_data.pop('image')
-        tags = validated_data.pop('tags')
-        ingredients = validated_data.pop('ingredients')
-        recipe = Recipe.objects.create(image=image, **validated_data)
-        recipe.tags.set(tags)
-        for ingredient in ingredients:
-            AmountIngredient.objects.get_or_create(
+    def create_ingredients_and_tags(self, recipe, validated_data):
+        ingredients, tags = (
+            validated_data.pop('ingredients'), validated_data.pop('tags')
+        )
+        recipe.ingredients.set(AmountIngredient.objects.bulk_create([
+            AmountIngredient(
                 recipe=recipe,
-                ingredients=ingredient['ingredient'],
+                ingredients=get_object_or_404(Ingredient, pk=ingredient['id']),
                 amount=ingredient['amount'],
-            )
+            ) for ingredient in ingredients
+        ]))
+        for tag in tags:
+            recipe.tags.set(tag)
         return recipe
 
+    def create(self, validated_data):
+        saved = {}
+        saved['ingredients'] = validated_data.pop('ingredients')
+        saved['tags'] = validated_data.pop('tags')
+        recipe = Recipe.objects.create(
+            image=validated_data.pop('image'),
+            **validated_data,
+        )
+        return self.create_ingredients_and_tags(recipe, saved)
+
     def update(self, recipe, validated_data):
-        tags = validated_data.get('tags')
-        ingredients = validated_data.get('ingredients')
-        recipe.image = validated_data.get(
-            'image', recipe.image)
-        recipe.name = validated_data.get(
-            'name', recipe.name)
-        recipe.text = validated_data.get(
-            'text', recipe.text)
-        recipe.cooking_time = validated_data.get(
-            'cooking_time', recipe.cooking_time)
-        if tags:
-            recipe.tags.clear()
-            recipe.tags.set(tags)
-        if ingredients:
-            recipe.ingredients.clear()
-            for ingredient in ingredients:
-                AmountIngredient.objects.get_or_create(
-                    recipe=recipe,
-                    ingredients=ingredient['ingredient'],
-                    amount=ingredient['amount'],
-                )
-        recipe.save()
-        return recipe
+        recipe.tags.clear()
+        recipe.ingredients.clear()
+        recipe = self.create_ingredients_and_tags(validated_data, recipe)
+        return super().update(recipe, validated_data)

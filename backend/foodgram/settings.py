@@ -69,6 +69,13 @@ DATABASES = {
     }
 }
 
+# DATABASES = {
+#    'default': {
+#        'ENGINE': 'django.db.backends.sqlite3',
+#        'NAME': os.path.join(BASE_DIR, 'db.sqlite3'),
+#    }
+# }
+
 AUTH_PASSWORD_VALIDATORS = [
     {
         'NAME': 'django.contrib.auth.password_validation.UserAttributeSimilarityValidator',
@@ -110,6 +117,9 @@ REST_FRAMEWORK = {
 
     'DEFAULT_PERMISSION_CLASSES':
     ['rest_framework.permissions.IsAuthenticatedOrReadOnly', ],
+
+    'DEFAULT_FILTER_BACKENDS':
+    ['django_filters.rest_framework.DjangoFilterBackend', ],
 }
 
 DJOSER = {
@@ -133,3 +143,5 @@ MAX_LEN_RECIPES_CHARFIELD = 200
 MAX_LEN_USERS_CHARFIELD = 120
 MIN_LEN_USERNAME = 3
 DATE_TIME_FORMAT = '%d/%m/%Y %H:%M'
+TRUE_SEARCH = ('1', 'true',)
+FALSE_SEARCH = ('0', 'false',)

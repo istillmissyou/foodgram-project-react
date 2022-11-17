@@ -6,7 +6,6 @@ from django.db.models import (CASCADE, CharField, CheckConstraint,
                               PositiveSmallIntegerField, Q, SlugField,
                               TextField, UniqueConstraint)
 from django.db.models.functions import Length
-
 from foodgram.settings import (MAX_LEN_RECIPES_CHARFIELD,
                                MAX_LEN_USERS_CHARFIELD, MIN_LEN_USERNAME)
 
@@ -94,10 +93,9 @@ class Recipe(Model):
         User,
         related_name='carts',
     )
-    image = ImageField(upload_to='recipes')
+    image = ImageField(upload_to='recipes/')
     name = CharField(
         max_length=MAX_LEN_RECIPES_CHARFIELD,
-        upload_to='recipe',
     )
     text = TextField()
     cooking_time = PositiveSmallIntegerField(
@@ -149,7 +147,7 @@ class AmountIngredient(Model):
             UniqueConstraint(
                 fields=[
                     'recipe',
-                    'ingredient',
+                    'ingredients',
                 ],
                 name='amount_ingredient',
             ),
