@@ -3,9 +3,10 @@ from string import hexdigits
 from django.db.models import F
 from django.shortcuts import get_object_or_404
 from drf_extra_fields.fields import Base64ImageField
-from recipes.models import AmountIngredient, Ingredient, Recipe, Tag, User
 from rest_framework.serializers import (ModelSerializer, SerializerMethodField,
                                         ValidationError)
+
+from recipes.models import AmountIngredient, Ingredient, Recipe, Tag, User
 
 
 class TagSerializer(ModelSerializer):

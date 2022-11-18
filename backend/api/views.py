@@ -1,20 +1,19 @@
-from datetime import datetime
-
 from django.db.models import F, Sum
 from django.http.response import HttpResponse
+from django.utils import timezone
 from django_filters.rest_framework.backends import DjangoFilterBackend
 from djoser.views import UserViewSet
-from foodgram.settings import DATE_TIME_FORMAT
-from recipes.models import AmountIngredient, Ingredient, Recipe, Tag
 from rest_framework.decorators import action
 from rest_framework.response import Response
 from rest_framework.status import HTTP_400_BAD_REQUEST, HTTP_401_UNAUTHORIZED
 from rest_framework.viewsets import ModelViewSet, ReadOnlyModelViewSet
 
 from .filters import IngredientSearchFilter, RecipeFilter
+from foodgram.settings import DATE_TIME_FORMAT
 from .mixins import AddDelViewMixin
 from .paginators import PageLimitPagination
 from .permissions import IsAdminOrReadOnly, IsAuthorOrAdminOrModerator
+from recipes.models import AmountIngredient, Ingredient, Recipe, Tag
 from .serializers import (IngredientSerializer, RecipeSerializer,
                           ShortRecipeSerializer, TagSerializer,
                           UserSubscribeSerializer)
@@ -88,7 +87,7 @@ class RecipeViewSet(ModelViewSet, AddDelViewMixin):
         filename = f'{user.username}_shopping_list.txt'
         shopping_list = (
             f'Список покупок для: {user.first_name}\n\n'
-            f'{datetime.now().strftime(DATE_TIME_FORMAT)}\n\n'
+            f'{timezone.now().strftime(DATE_TIME_FORMAT)}\n\n'
         )
         for ing in amount_ingredients:
             shopping_list += (
