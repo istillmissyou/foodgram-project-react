@@ -24,8 +24,6 @@ services:
     image: ssd256/foodgram_front:latest
     volumes:
       - ../frontend/:/app/result_build/
-    depends_on:
-      - backend
 
   nginx:
     image: nginx:1.21.3-alpine
@@ -37,8 +35,6 @@ services:
       - ../docs/:/usr/share/nginx/html/api/docs/
       - static_value:/var/html/static/
       - media_value:/var/html/media/
-    depends_on:
-      - frontend
 
 volumes:
   static_value:
