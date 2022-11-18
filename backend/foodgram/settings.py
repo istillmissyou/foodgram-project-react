@@ -8,7 +8,7 @@ BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
 SECRET_KEY = os.getenv('SECRET_KEY', default='pekw_osrt)3tze%@ci=6t4d(#+n4ki(=odwnr280)=m&p61i-k')
 
-DEBUG = False
+DEBUG = True
 
 ALLOWED_HOSTS = ['*']
 
@@ -68,13 +68,6 @@ DATABASES = {
         'PORT': os.getenv('DB_PORT', default='5432'),
     }
 }
-
-# DATABASES = {
-#    'default': {
-#        'ENGINE': 'django.db.backends.sqlite3',
-#        'NAME': os.path.join(BASE_DIR, 'db.sqlite3'),
-#    }
-# }
 
 AUTH_PASSWORD_VALIDATORS = [
     {

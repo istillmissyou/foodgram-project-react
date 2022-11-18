@@ -52,7 +52,6 @@ class IngredientViewSet(ReadOnlyModelViewSet):
     permission_classes = [IsAdminOrReadOnly]
     filter_backends = (DjangoFilterBackend,)
     filterset_class = IngredientSearchFilter
-    http_method_names = ('get',)
 
 
 class RecipeViewSet(ModelViewSet, AddDelViewMixin):
