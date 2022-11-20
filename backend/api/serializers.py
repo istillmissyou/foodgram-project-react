@@ -3,13 +3,15 @@ from string import hexdigits
 from django.contrib.auth import get_user_model
 from django.db.transaction import atomic
 from drf_extra_fields.fields import Base64ImageField
-from foodgram.settings import (INGREDIENTS_MIN_AMOUNT,
-                               INGREDIENTS_MIN_AMOUNT_ERROR)
-from recipes.models import AmountIngredient, Ingredient, Recipe, Tag
 from rest_framework.serializers import (IntegerField, ModelSerializer,
                                         PrimaryKeyRelatedField,
                                         SerializerMethodField,
                                         SlugRelatedField, ValidationError)
+from rest_framework.validators import UniqueTogetherValidator
+
+from foodgram.settings import (INGREDIENTS_MIN_AMOUNT,
+                               INGREDIENTS_MIN_AMOUNT_ERROR)
+from recipes.models import AmountIngredient, Favorite, Ingredient, Recipe, Tag
 
 User = get_user_model()
 
@@ -133,6 +135,20 @@ class UserSubscribeSerializer(UserSerializer):
         return obj.recipes.count()
 
 
+class FavoriteSerializer(ModelSerializer):
+
+    class Meta:
+        fields = ('user', 'recipe')
+        model = Favorite
+        validators = [
+            UniqueTogetherValidator(
+                queryset=Favorite.objects.all(),
+                fields=('user', 'recipe'),
+                message='Рецепт уже добавлен в избранное'
+            )
+        ]
+
+
 class RecipeSerializer(ModelSerializer):
     tags = TagSerializer(read_only=True, many=True)
     author = UserSerializer(read_only=True)
@@ -183,7 +199,7 @@ class RecipeSerializer(ModelSerializer):
         user = self.context.get('request').user
         if user.is_anonymous:
             return False
-        return user.favorites.filter(id=obj.id).exists()
+        return Favorite.objects.filter(recipe=obj, user=user).exists()
 
     def get_is_in_shopping_cart(self, obj):
         user = self.context.get('request').user

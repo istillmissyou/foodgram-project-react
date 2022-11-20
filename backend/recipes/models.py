@@ -4,6 +4,7 @@ from django.db.models import (CASCADE, CharField, DateTimeField, EmailField,
                               ForeignKey, ImageField, ManyToManyField, Model,
                               PositiveSmallIntegerField, SlugField, TextField,
                               UniqueConstraint)
+
 from foodgram.settings import (MAX_LEN_RECIPES_CHARFIELD,
                                MAX_LEN_USERS_CHARFIELD)
 
@@ -75,10 +76,6 @@ class Recipe(Model):
         related_name='recipes',
         through='recipes.AmountIngredient',
     )
-    favorite = ManyToManyField(
-        User,
-        related_name='favorites',
-    )
     cart = ManyToManyField(
         User,
         related_name='carts',
@@ -109,6 +106,26 @@ class Recipe(Model):
 
     def __str__(self):
         return f'{self.name}. Автор: {self.author.username}'
+
+
+class Favorite(Model):
+    user = ForeignKey(
+        User,
+        related_name='favorites',
+        on_delete=CASCADE,
+    )
+    recipe = ForeignKey(
+        Recipe,
+        related_name='favorites',
+        on_delete=CASCADE,
+    )
+    added = DateTimeField(auto_now_add=True)
+
+    class Meta:
+        UniqueConstraint(fields=['recipe', 'user'], name='favorite_unique')
+
+    def __str__(self):
+        return f"{self.user} has favorites: {self.recipe.name}"
 
 
 class AmountIngredient(Model):

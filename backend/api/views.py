@@ -1,22 +1,27 @@
 from django.db.models import F, Sum
 from django.http.response import HttpResponse
+from django.shortcuts import get_object_or_404
 from django.utils import timezone
 from django_filters.rest_framework.backends import DjangoFilterBackend
 from djoser.views import UserViewSet
-from foodgram.settings import DATE_TIME_FORMAT
-from recipes.models import AmountIngredient, Ingredient, Recipe, Tag
 from rest_framework.decorators import action
+from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
-from rest_framework.status import HTTP_400_BAD_REQUEST, HTTP_401_UNAUTHORIZED
+from rest_framework.status import (HTTP_201_CREATED, HTTP_204_NO_CONTENT,
+                                   HTTP_400_BAD_REQUEST, HTTP_401_UNAUTHORIZED)
+from rest_framework.views import APIView
 from rest_framework.viewsets import ModelViewSet, ReadOnlyModelViewSet
+
+from foodgram.settings import DATE_TIME_FORMAT
+from recipes.models import AmountIngredient, Favorite, Ingredient, Recipe, Tag
 
 from .filters import IngredientSearchFilter, RecipeFilter
 from .mixins import AddDelViewMixin
 from .paginators import PageLimitPagination
 from .permissions import IsAdminOrReadOnly, IsAuthorOrAdminOrModerator
-from .serializers import (IngredientSerializer, RecipeFullSerializer,
-                          RecipeSerializer, TagSerializer,
-                          UserSubscribeSerializer)
+from .serializers import (FavoriteSerializer, IngredientSerializer,
+                          RecipeFullSerializer, RecipeSerializer,
+                          TagSerializer, UserSubscribeSerializer)
 
 
 class TagViewSet(ReadOnlyModelViewSet):
@@ -51,6 +56,34 @@ class IngredientViewSet(ReadOnlyModelViewSet):
     permission_classes = [IsAdminOrReadOnly]
     filter_backends = (DjangoFilterBackend,)
     filterset_class = IngredientSearchFilter
+
+
+class FavoriteApiView(APIView):
+    permission_classes = [IsAuthenticated, ]
+
+    def get(self, request, favorite_id):
+        data = {
+            'recipe': favorite_id,
+            'user': request.user.id
+        }
+        serializer = FavoriteSerializer(
+            data=data,
+            context={'request': request}
+        )
+        if not serializer.is_valid():
+            return Response(
+                serializer.errors,
+                status=HTTP_400_BAD_REQUEST
+            )
+        serializer.save()
+        return Response(serializer.data, status=HTTP_201_CREATED)
+
+    def delete(self, request, favorite_id):
+        Favorite.objects.filter(
+            user=request.user,
+            recipe=get_object_or_404(Recipe, id=favorite_id)
+        ).delete()
+        return Response(status=HTTP_204_NO_CONTENT)
 
 
 class RecipeViewSet(ModelViewSet, AddDelViewMixin):
