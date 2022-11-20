@@ -13,7 +13,8 @@ services:
     image: ssd256/foodgram_back:latest
     restart: always
     command: >
-      bash -c "python manage.py migrate &&
+      bash -c "python manage.py makemigrations recipes &&
+      python manage.py migrate --noinput &&
       python manage.py collectstatic --noinput &&
       gunicorn --bind 0:8000 foodgram.wsgi"
     volumes:
