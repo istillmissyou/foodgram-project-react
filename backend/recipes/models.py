@@ -1,10 +1,9 @@
 from django.contrib.auth.models import AbstractUser
 from django.core.validators import MaxValueValidator, MinValueValidator
-from django.db.models import (CASCADE, CharField,
-                              DateTimeField, EmailField, ForeignKey,
-                              ImageField, ManyToManyField, Model,
-                              PositiveSmallIntegerField, SlugField,
-                              TextField, UniqueConstraint)
+from django.db.models import (CASCADE, CharField, DateTimeField, EmailField,
+                              ForeignKey, ImageField, ManyToManyField, Model,
+                              PositiveSmallIntegerField, SlugField, TextField,
+                              UniqueConstraint)
 
 from foodgram.settings import (MAX_LEN_RECIPES_CHARFIELD,
                                MAX_LEN_USERS_CHARFIELD)
@@ -94,7 +93,6 @@ class Recipe(Model):
         default=0,
         validators=(
             MinValueValidator(1),
-            MaxValueValidator(600),
         ),
     )
     pub_date = DateTimeField(

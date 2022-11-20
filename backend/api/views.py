@@ -8,14 +8,15 @@ from rest_framework.response import Response
 from rest_framework.status import HTTP_400_BAD_REQUEST, HTTP_401_UNAUTHORIZED
 from rest_framework.viewsets import ModelViewSet, ReadOnlyModelViewSet
 
-from .filters import IngredientSearchFilter, RecipeFilter
 from foodgram.settings import DATE_TIME_FORMAT
+from recipes.models import AmountIngredient, Ingredient, Recipe, Tag
+
+from .filters import IngredientSearchFilter, RecipeFilter
 from .mixins import AddDelViewMixin
 from .paginators import PageLimitPagination
 from .permissions import IsAdminOrReadOnly, IsAuthorOrAdminOrModerator
-from recipes.models import AmountIngredient, Ingredient, Recipe, Tag
 from .serializers import (IngredientSerializer, RecipeSerializer,
-                          ShortRecipeSerializer, TagSerializer,
+                          RecipeFullSerializer, TagSerializer,
                           UserSubscribeSerializer)
 
 
@@ -54,13 +55,21 @@ class IngredientViewSet(ReadOnlyModelViewSet):
 
 
 class RecipeViewSet(ModelViewSet, AddDelViewMixin):
-    queryset = Recipe.objects.select_related('author')
-    serializer_class = RecipeSerializer
-    add_serializer = ShortRecipeSerializer
+    queryset = Recipe.objects.all()
     permission_classes = [IsAuthorOrAdminOrModerator]
     filter_backends = (DjangoFilterBackend,)
     filterset_class = RecipeFilter
     pagination_class = PageLimitPagination
+
+    def get_serializer_class(self):
+        if self.request.method in ('POST', 'PUT', 'PATCH'):
+            return RecipeFullSerializer
+        return RecipeSerializer
+
+    def get_serializer_context(self):
+        return super().get_serializer_context().update(
+            {'request': self.request}
+        )
 
     @action(methods=('get', 'post', 'delete',), detail=True)
     def favorite(self, request, pk):

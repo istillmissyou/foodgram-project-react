@@ -5,7 +5,7 @@ from django_filters.rest_framework import (BooleanFilter, CharFilter,
                                            ModelMultipleChoiceFilter)
 
 from foodgram.settings import FALSE_SEARCH, TRUE_SEARCH
-from recipes.models import Tag, Ingredient
+from recipes.models import Ingredient, Tag
 
 
 class IngredientSearchFilter(FilterSet):

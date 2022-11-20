@@ -1,11 +1,12 @@
 from string import hexdigits
 
 from django.contrib.auth import get_user_model
-from django.db.models import F
 from django.db.transaction import atomic
 from drf_extra_fields.fields import Base64ImageField
-from rest_framework.serializers import (ModelSerializer, SerializerMethodField,
-                                        ValidationError)
+from rest_framework.serializers import (IntegerField, ModelSerializer,
+                                        PrimaryKeyRelatedField,
+                                        SerializerMethodField,
+                                        SlugRelatedField, ValidationError)
 
 from foodgram.settings import (INGREDIENTS_MIN_AMOUNT,
                                INGREDIENTS_MIN_AMOUNT_ERROR)
@@ -18,7 +19,8 @@ class TagSerializer(ModelSerializer):
     class Meta:
         model = Tag
         fields = '__all__'
-        read_only_fields = '__all__',
+        lookup_field = 'id'
+        extra_kwargs = {'url': {'lookup_field': 'id'}}
 
     def validate_color(self, color):
         color = str(color).strip(' #')
@@ -33,7 +35,39 @@ class IngredientSerializer(ModelSerializer):
     class Meta:
         model = Ingredient
         fields = '__all__'
-        read_only_fields = '__all__',
+
+
+class AmountIngredientSerializer(ModelSerializer):
+    id = PrimaryKeyRelatedField(
+        source='ingredient',
+        read_only=True,
+    )
+    name = SlugRelatedField(
+        source='ingredient',
+        slug_field='name',
+        read_only=True,
+    )
+    measurement_unit = SlugRelatedField(
+        source='ingredient',
+        slug_field='measuement_unit',
+        read_only=True,
+    )
+
+    class Meta:
+        model = AmountIngredient
+        fields = '__all__'
+
+
+class AddAmountIngredientSerializer(ModelSerializer):
+    id = PrimaryKeyRelatedField(
+        source='ingredient',
+        queryset=Ingredient.objects.all(),
+    )
+    amount = IntegerField()
+
+    class Meta:
+        model = AmountIngredient
+        fields = ('amount', 'id')
 
 
 class UserSerializer(ModelSerializer):
@@ -106,7 +140,6 @@ class RecipeSerializer(ModelSerializer):
     ingredients = SerializerMethodField()
     is_favorited = SerializerMethodField()
     is_in_shopping_cart = SerializerMethodField()
-    image = Base64ImageField()
 
     class Meta:
         model = Recipe
@@ -142,10 +175,10 @@ class RecipeSerializer(ModelSerializer):
         return data
 
     def get_ingredients(self, obj):
-        return obj.ingredients.values(
-            'id', 'name', 'measurement_unit',
-            amount=F('recipe__amount'),
-        )
+        return AmountIngredientSerializer(
+            obj.ingredient.all(),
+            many=True
+        ).data
 
     def get_is_favorited(self, obj):
         user = self.context.get('request').user
@@ -159,35 +192,66 @@ class RecipeSerializer(ModelSerializer):
             return False
         return user.carts.filter(id=obj.id).exists()
 
+
+class RecipeFullSerializer(ModelSerializer):
+    author = UserSerializer(read_only=True)
+    ingredients = AddAmountIngredientSerializer(many=True)
+    tags = PrimaryKeyRelatedField(
+        queryset=Tag.objects.all(),
+        many=True,
+    )
+    image = Base64ImageField()
+    cooking_time = IntegerField()
+
+    class Meta:
+        model = Recipe
+        fields = (
+            'id',
+            'image',
+            'tags',
+            'author',
+            'ingredients',
+            'name',
+            'text',
+            'cooking_time',
+        )
+
     def create_bulk(self, recipe, ingredients_data):
         AmountIngredient.objects.bulk_create([AmountIngredient(
             recipe=recipe,
-            ingredient=ingredient['ingredient'],
+            ingredients=ingredient['ingredient'],
             amount=ingredient['amount']
         ) for ingredient in ingredients_data])
 
     @atomic
     def create(self, validated_data):
-        request = self.context.get('request')
-        ingredients_data = validated_data.pop('ingredients')
-        tags_data = validated_data.pop('tags')
-        recipe = Recipe.objects.create(author=request.user, **validated_data)
+        recipe = Recipe.objects.create(
+            author=self.context.get('request').user,
+            **validated_data
+        )
         recipe.save()
-        recipe.tags.set(tags_data)
-        self.create_bulk(recipe, ingredients_data)
+        recipe.tags.set(validated_data.pop('tags'))
+        self.create_bulk(
+            recipe,
+            validated_data.pop('ingredients')
+        )
         return recipe
 
     @atomic
     def update(self, instance, validated_data):
-        ingredients_data = validated_data.pop('ingredients')
-        tags_data = validated_data.pop('tags')
         AmountIngredient.objects.filter(recipe=instance).delete()
-        self.create_bulk(instance, ingredients_data)
+        self.create_bulk(instance, validated_data.pop('ingredients'))
         instance.name = validated_data.pop('name')
         instance.text = validated_data.pop('text')
         instance.cooking_time = validated_data.pop('cooking_time')
         if validated_data.get('image') is not None:
             instance.image = validated_data.pop('image')
         instance.save()
-        instance.tags.set(tags_data)
+        instance.tags.set(validated_data.pop('tags'))
         return instance
+
+    def to_representation(self, instance):
+        return RecipeSerializer(
+            instance,
+            context={'request': self.context.get('request')}
+        ).data
