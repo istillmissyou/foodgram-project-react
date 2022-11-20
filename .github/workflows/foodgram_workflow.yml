@@ -79,8 +79,6 @@ jobs:
           sudo docker-compose stop
           sudo docker-compose rm shtun_frontend_1
           sudo docker-compose rm shtun_backend_1
-          sudo docker rmi ${{ secrets.DOCKER_USERNAME }}/foodgram_front
-          sudo docker rmi ${{ secrets.DOCKER_USERNAME }}/foodgram_back
           rm .env
           touch .env
           echo SECRET_KEY="${{ secrets.SECRET_KEY }}" >> .env
