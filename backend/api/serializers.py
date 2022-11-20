@@ -7,6 +7,8 @@ from drf_extra_fields.fields import Base64ImageField
 from rest_framework.serializers import (ModelSerializer, SerializerMethodField,
                                         ValidationError)
 
+from foodgram.settings import (INGREDIENTS_MIN_AMOUNT,
+                               INGREDIENTS_MIN_AMOUNT_ERROR)
 from recipes.models import AmountIngredient, Ingredient, Recipe, Tag
 
 User = get_user_model()
@@ -126,16 +128,17 @@ class RecipeSerializer(ModelSerializer):
         )
 
     def validate(self, data):
-        ingredients = self.initial_data.get('ingredients')
-        ingredients_set = set()
-        for ingredient in ingredients:
-            id = ingredient.get('id')
-            if id in ingredients_set:
+        ingredients_id = []
+        for ingredient in data['ingredients']:
+            if ingredient['amount'] < INGREDIENTS_MIN_AMOUNT:
                 raise ValidationError(
-                    'Ингредиент в рецепте не должен повторяться.'
+                    INGREDIENTS_MIN_AMOUNT_ERROR.format(
+                        min_amount=INGREDIENTS_MIN_AMOUNT,
+                    )
                 )
-            ingredients_set.add(id)
-        data['ingredients'] = ingredients
+            ingredients_id.append(ingredient['id'])
+        if len(ingredients_id) > len(set(ingredients_id)):
+            raise ValidationError('Ингредиенты не должны повторяться')
         return data
 
     def get_ingredients(self, obj):

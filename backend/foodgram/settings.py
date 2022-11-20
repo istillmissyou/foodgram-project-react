@@ -142,3 +142,5 @@ MIN_LEN_USERNAME = 3
 DATE_TIME_FORMAT = '%d/%m/%Y %H:%M'
 TRUE_SEARCH = ('1', 'true',)
 FALSE_SEARCH = ('0', 'false',)
+INGREDIENTS_MIN_AMOUNT = 1
+INGREDIENTS_MIN_AMOUNT_ERROR = ('Количество ингредиента не может быть меньше {min_amount}')
