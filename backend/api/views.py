@@ -35,13 +35,12 @@ class CustomUserViewSet(UserViewSet, AddDelViewMixin):
 
     @action(methods=('get',), detail=False)
     def subscriptions(self, request):
-        user = self.request.user
-        if user.is_anonymous:
+        if (user := self.request.user).is_anonymous:
             return Response(status=HTTP_401_UNAUTHORIZED)
         authors = user.subscribe.all()
         pages = self.paginate_queryset(authors)
         serializer = UserSubscribeSerializer(
-            pages, many=True, context={'request': request}
+            pages, context={'request': request}, many=True,
         )
         return self.get_paginated_response(serializer.data)
 

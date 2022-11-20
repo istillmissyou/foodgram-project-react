@@ -2,6 +2,7 @@ from string import hexdigits
 
 from django.contrib.auth import get_user_model
 from django.db.models import F
+from django.db.transaction import atomic
 from drf_extra_fields.fields import Base64ImageField
 from rest_framework.serializers import (ModelSerializer, SerializerMethodField,
                                         ValidationError)
@@ -158,33 +159,35 @@ class RecipeSerializer(ModelSerializer):
             return False
         return user.carts.filter(id=obj.id).exists()
 
-    def create_ingredients_and_tags(self, recipe, validated_data):
-        ingredients, tags = (
-            validated_data.pop('ingredients'), validated_data.pop('tags')
-        )
-        recipe.ingredients.set(AmountIngredient.objects.bulk_create([
-            AmountIngredient(
-                recipe=recipe,
-                ingredients=ingredient['ingredient'],
-                amount=ingredient['amount'],
-            ) for ingredient in ingredients
-        ]))
-        for tag in tags:
-            recipe.tags.set(tag)
+    def create_bulk(self, recipe, ingredients_data):
+        AmountIngredient.objects.bulk_create([AmountIngredient(
+            recipe=recipe,
+            ingredient=ingredient['ingredient'],
+            amount=ingredient['amount']
+        ) for ingredient in ingredients_data])
+
+    @atomic
+    def create(self, validated_data):
+        request = self.context.get('request')
+        ingredients_data = validated_data.pop('ingredients')
+        tags_data = validated_data.pop('tags')
+        recipe = Recipe.objects.create(author=request.user, **validated_data)
+        recipe.save()
+        recipe.tags.set(tags_data)
+        self.create_bulk(recipe, ingredients_data)
         return recipe
 
-    def create(self, validated_data):
-        saved = {}
-        saved['ingredients'] = validated_data.pop('ingredients')
-        saved['tags'] = validated_data.pop('tags')
-        recipe = Recipe.objects.create(
-            image=validated_data.pop('image'),
-            **validated_data,
-        )
-        return self.create_ingredients_and_tags(recipe, saved)
-
-    def update(self, recipe, validated_data):
-        recipe.tags.clear()
-        recipe.ingredients.clear()
-        recipe = self.create_ingredients_and_tags(validated_data, recipe)
-        return super().update(recipe, validated_data)
+    @atomic
+    def update(self, instance, validated_data):
+        ingredients_data = validated_data.pop('ingredients')
+        tags_data = validated_data.pop('tags')
+        AmountIngredient.objects.filter(recipe=instance).delete()
+        self.create_bulk(instance, ingredients_data)
+        instance.name = validated_data.pop('name')
+        instance.text = validated_data.pop('text')
+        instance.cooking_time = validated_data.pop('cooking_time')
+        if validated_data.get('image') is not None:
+            instance.image = validated_data.pop('image')
+        instance.save()
+        instance.tags.set(tags_data)
+        return instance
