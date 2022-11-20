@@ -74,14 +74,11 @@ jobs:
         key: ${{ secrets.SSH_KEY }}
         passphrase: ${{ secrets.PASSPHRASE }}
         script: |
-          sudo systemctl stop nginx
           sudo docker image pull ${{ secrets.DOCKER_USERNAME }}/foodgram_back
           sudo docker image pull ${{ secrets.DOCKER_USERNAME }}/foodgram_front
           sudo docker-compose stop
-          sudo docker rm shtun_frontend_1
-          sudo docker rm shtun_backend_1
-          sudo docker rmi ${{ secrets.DOCKER_USERNAME }}/foodgram_front
-          sudo docker rmi ${{ secrets.DOCKER_USERNAME }}/foodgram_back
+          sudo docker-compose rm shtun_frontend_1
+          sudo docker-compose rm shtun_backend_1
           rm .env
           touch .env
           echo SECRET_KEY="${{ secrets.SECRET_KEY }}" >> .env
@@ -92,6 +89,9 @@ jobs:
           echo DB_HOST=${{ secrets.DB_HOST }} >> .env
           echo DB_PORT=${{ secrets.DB_PORT }} >> .env
           sudo docker-compose up -d
+          sudo docker-compose exec -T backend python manage.py makemigrations recipes
+          sudo docker-compose exec -T backend python manage.py migrate --noinput
+          sudo docker-compose exec -T backend python manage.py collectstatic --no-input
   send_message:
     runs-on: ubuntu-latest
     needs: deploy
