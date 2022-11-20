@@ -3,7 +3,6 @@ from urllib.parse import unquote
 from django_filters.rest_framework import (BooleanFilter, CharFilter,
                                            FilterSet,
                                            ModelMultipleChoiceFilter)
-
 from foodgram.settings import FALSE_SEARCH, TRUE_SEARCH
 from recipes.models import Ingredient, Tag
 

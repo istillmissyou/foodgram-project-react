@@ -3,14 +3,13 @@ from string import hexdigits
 from django.contrib.auth import get_user_model
 from django.db.transaction import atomic
 from drf_extra_fields.fields import Base64ImageField
+from foodgram.settings import (INGREDIENTS_MIN_AMOUNT,
+                               INGREDIENTS_MIN_AMOUNT_ERROR)
+from recipes.models import AmountIngredient, Ingredient, Recipe, Tag
 from rest_framework.serializers import (IntegerField, ModelSerializer,
                                         PrimaryKeyRelatedField,
                                         SerializerMethodField,
                                         SlugRelatedField, ValidationError)
-
-from foodgram.settings import (INGREDIENTS_MIN_AMOUNT,
-                               INGREDIENTS_MIN_AMOUNT_ERROR)
-from recipes.models import AmountIngredient, Ingredient, Recipe, Tag
 
 User = get_user_model()
 

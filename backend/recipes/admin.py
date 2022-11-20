@@ -1,10 +1,9 @@
-from django.contrib import admin
+from django.contrib.admin import ModelAdmin, TabularInline, site
 
-from recipes.models import (Recipe, Ingredient,
-                            AmountIngredient)
+from .models import AmountIngredient, Ingredient, Recipe, Tag
 
 
-class IngredientAdmin(admin.ModelAdmin):
+class IngredientAdmin(ModelAdmin):
     list_display = (
         'id',
         'name',
@@ -14,11 +13,11 @@ class IngredientAdmin(admin.ModelAdmin):
     empty_value_display = '-пусто-'
 
 
-class IngredientsInline(admin.TabularInline):
+class IngredientsInline(TabularInline):
     model = Ingredient
 
 
-class RecipeAdmin(admin.ModelAdmin):
+class RecipeAdmin(ModelAdmin):
     list_display = (
         'id',
         'author',
@@ -40,6 +39,7 @@ class RecipeAdmin(admin.ModelAdmin):
     ingredients.short_description = 'Ингредиенты'
 
 
-admin.site.register(Recipe, RecipeAdmin)
-admin.site.register(Ingredient, IngredientAdmin)
-admin.site.register(AmountIngredient)
+site.register(Recipe, RecipeAdmin)
+site.register(Ingredient, IngredientAdmin)
+site.register(AmountIngredient)
+site.register(Tag)
