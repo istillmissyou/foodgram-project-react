@@ -30,7 +30,6 @@ class RecipeAdmin(ModelAdmin):
     search_fields = ('author', 'name')
     list_filter = ('author', 'name', 'tags')
     empty_value_display = '-пусто-'
-    inlines = (IngredientsInline,)
 
     def is_favorited(self, obj):
         return obj.favorites.count()
