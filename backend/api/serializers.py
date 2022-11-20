@@ -2,7 +2,6 @@ from string import hexdigits
 
 from django.contrib.auth import get_user_model
 from django.db.models import F
-from django.shortcuts import get_object_or_404
 from drf_extra_fields.fields import Base64ImageField
 from rest_framework.serializers import (ModelSerializer, SerializerMethodField,
                                         ValidationError)
@@ -18,7 +17,7 @@ class TagSerializer(ModelSerializer):
     class Meta:
         model = Tag
         fields = '__all__'
-        read_only_fields = '__all__'
+        read_only_fields = '__all__',
 
     def validate_color(self, color):
         color = str(color).strip(' #')
@@ -33,7 +32,7 @@ class IngredientSerializer(ModelSerializer):
     class Meta:
         model = Ingredient
         fields = '__all__'
-        read_only_fields = '__all__'
+        read_only_fields = '__all__',
 
 
 class UserSerializer(ModelSerializer):
@@ -74,8 +73,8 @@ class UserSerializer(ModelSerializer):
 class ShortRecipeSerializer(ModelSerializer):
     class Meta:
         model = Recipe
-        fields = 'id', 'name', 'image', 'cooking_time',
-        read_only_fields = '__all__'
+        fields = 'id', 'name', 'image', 'cooking_time'
+        read_only_fields = '__all__',
 
 
 class UserSubscribeSerializer(UserSerializer):
@@ -166,7 +165,7 @@ class RecipeSerializer(ModelSerializer):
         recipe.ingredients.set(AmountIngredient.objects.bulk_create([
             AmountIngredient(
                 recipe=recipe,
-                ingredients=get_object_or_404(Ingredient, pk=ingredient['id']),
+                ingredients=ingredient['ingredient'],
                 amount=ingredient['amount'],
             ) for ingredient in ingredients
         ]))
