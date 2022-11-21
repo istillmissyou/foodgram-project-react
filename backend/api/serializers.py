@@ -128,7 +128,8 @@ class RecipeSerializer(ModelSerializer):
         )
 
     def validate(self, data):
-        for ingredient in self.initial_data.get('ingredients'):
+        ingredients = self.initial_data.get('ingredients')
+        for ingredient in ingredients:
             if int(ingredient['amount']) < INGREDIENTS_MIN_AMOUNT:
                 raise ValidationError(
                     INGREDIENTS_MIN_AMOUNT_ERROR.format(
