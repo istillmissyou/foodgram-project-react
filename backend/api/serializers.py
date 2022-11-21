@@ -2,7 +2,6 @@ from string import hexdigits
 
 from django.contrib.auth import get_user_model
 from django.db.models import F
-from django.shortcuts import get_object_or_404
 from drf_extra_fields.fields import Base64ImageField
 from rest_framework.serializers import (ModelSerializer, SerializerMethodField,
                                         ValidationError)
@@ -155,33 +154,35 @@ class RecipeSerializer(ModelSerializer):
             return False
         return user.carts.filter(id=obj.id).exists()
 
-    def create_ingredients_and_tags(self, recipe, validated_data):
-        ingredients, tags = (
-            validated_data.pop('ingredients'), validated_data.pop('tags')
-        )
-        recipe.ingredients.set(AmountIngredient.objects.bulk_create([
-            AmountIngredient(
-                recipe=recipe,
-                ingredients=get_object_or_404(Ingredient, pk=ingredient['id']),
-                amount=ingredient['amount'],
-            ) for ingredient in ingredients
-        ]))
-        for tag in tags:
-            recipe.tags.set(tag)
-        return recipe
+    def create_bulk_ingredients(self, recipe, ingredients_data):
+        AmountIngredient.objects.bulk_create([AmountIngredient(
+            ingredient=ingredient['ingredient'],
+            recipe=recipe,
+            amount=ingredient['amount']
+        ) for ingredient in ingredients_data])
 
     def create(self, validated_data):
-        saved = {}
-        saved['ingredients'] = validated_data.pop('ingredients')
-        saved['tags'] = validated_data.pop('tags')
+        ingredients_data = validated_data.pop('ingredients')
         recipe = Recipe.objects.create(
+            author=self.context.get('request').user,
             image=validated_data.pop('image'),
             **validated_data,
         )
-        return self.create_ingredients_and_tags(recipe, saved)
+        recipe.save()
+        recipe.tags.set(validated_data.pop('tags'))
+        self.create_bulk_ingredients(recipe, ingredients_data)
+        return recipe
 
     def update(self, recipe, validated_data):
-        recipe.tags.clear()
-        recipe.ingredients.clear()
-        recipe = self.create_ingredients_and_tags(validated_data, recipe)
-        return super().update(recipe, validated_data)
+        ingredients_data = validated_data.pop('ingredients')
+        tags_data = validated_data.pop('tags')
+        AmountIngredient.objects.filter(recipe=recipe).delete()
+        self.create_bulk_ingredients(recipe, ingredients_data)
+        recipe.name = validated_data.pop('name')
+        recipe.text = validated_data.pop('text')
+        recipe.cooking_time = validated_data.pop('cooking_time')
+        if validated_data.get('image') is not None:
+            recipe.image = validated_data.pop('image')
+        recipe.save()
+        recipe.tags.set(tags_data)
+        return recipe
