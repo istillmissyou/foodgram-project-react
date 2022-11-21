@@ -1,8 +1,8 @@
 from string import hexdigits
-from django.db.transaction import atomic
 
 from django.contrib.auth import get_user_model
 from django.db.models import F
+from django.shortcuts import get_object_or_404
 from drf_extra_fields.fields import Base64ImageField
 from rest_framework.serializers import (ModelSerializer, SerializerMethodField,
                                         ValidationError)
@@ -150,7 +150,7 @@ class RecipeSerializer(ModelSerializer):
         recipe.ingredients.set(AmountIngredient.objects.bulk_create([
             AmountIngredient(
                 recipe=recipe,
-                ingredients=ingredient['ingredient'],
+                ingredients=get_object_or_404(Ingredient, pk=ingredient['id']),
                 amount=ingredient['amount'],
             ) for ingredient in ingredients
         ]))
@@ -158,7 +158,6 @@ class RecipeSerializer(ModelSerializer):
             recipe.tags.set(tag)
         return recipe
 
-    @atomic
     def create(self, validated_data):
         saved = {}
         saved['ingredients'] = validated_data.pop('ingredients')
@@ -169,7 +168,6 @@ class RecipeSerializer(ModelSerializer):
         )
         return self.create_ingredients_and_tags(recipe, saved)
 
-    @atomic
     def update(self, recipe, validated_data):
         recipe.tags.clear()
         recipe.ingredients.clear()
