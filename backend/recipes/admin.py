@@ -49,7 +49,7 @@ class RecipeAdmin(ModelAdmin):
         'name', 'author',
     )
     list_filter = (
-        'name', 'author__username',
+        'name', 'author',
     )
 
     inlines = (IngredientInline,)
