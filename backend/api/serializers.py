@@ -92,7 +92,7 @@ class UserSerializer(ModelSerializer):
         user = self.context.get('request').user
         if user.is_anonymous or (user == obj):
             return False
-        return user.subscribe.filter(id=obj.id).exists()
+        return user.subscribes.filter(id=obj.id).exists()
 
     def create(self, validated_data):
         user = User(
@@ -144,7 +144,7 @@ class FavoriteSerializer(ModelSerializer):
             UniqueTogetherValidator(
                 queryset=Favorite.objects.all(),
                 fields=('user', 'recipe'),
-                message='Рецепт уже добавлен в избранное'
+                message='Рецепт уже в избранном'
             )
         ]
 
