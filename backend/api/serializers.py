@@ -33,7 +33,7 @@ class IngredientSerializer(ModelSerializer):
     class Meta:
         model = Ingredient
         fields = '__all__'
-        read_only_fields = '__all__'
+        read_only_fields = '__all__',
 
 
 class UserSerializer(ModelSerializer):
@@ -75,7 +75,7 @@ class ShortRecipeSerializer(ModelSerializer):
     class Meta:
         model = Recipe
         fields = 'id', 'name', 'image', 'cooking_time',
-        read_only_fields = '__all__'
+        read_only_fields = '__all__',
 
 
 class UserSubscribeSerializer(UserSerializer):
