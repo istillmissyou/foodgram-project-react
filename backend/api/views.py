@@ -58,10 +58,10 @@ class IngredientViewSet(ReadOnlyModelViewSet):
             if name[0] == '%':
                 name = unquote(name)
             else:
-                name = name.translate(
+                name = name.translate(str.maketrans(
                     'qwertyuiop[]asdfghjkl;\'zxcvbnm,./',
                     'йцукенгшщзхъфывапролджэячсмитьбю.'
-                )
+                ))
             name = name.lower()
             stw_queryset = list(queryset.filter(name__startswith=name))
             cnt_queryset = queryset.filter(name__contains=name)
