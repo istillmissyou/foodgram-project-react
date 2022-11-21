@@ -1,9 +1,20 @@
-from django.contrib.admin import ModelAdmin, TabularInline, site
+from django.contrib import admin
+from django.contrib.auth.admin import UserAdmin
 
-from .models import AmountIngredient, Ingredient, Recipe, Tag
+from .models import (CustomUser, Favorite, Follow, Ingredient,
+                     IngredientAmount, Recipe, ShoppingList, Tag)
 
 
-class IngredientAdmin(ModelAdmin):
+class CustomUserAdmin(UserAdmin):
+    model = CustomUser
+    list_display = ('id', 'username', 'first_name', 'last_name',
+                    'email', 'password', 'is_staff', 'is_active',)
+    ordering = ('email',)
+    search_fields = ('username', 'email',)
+    ordering = ('email',)
+
+
+class IngredientAdmin(admin.ModelAdmin):
     list_display = (
         'id',
         'name',
@@ -13,11 +24,11 @@ class IngredientAdmin(ModelAdmin):
     empty_value_display = '-пусто-'
 
 
-class IngredientsInline(TabularInline):
+class IngredientsInline(admin.TabularInline):
     model = Ingredient
 
 
-class RecipeAdmin(ModelAdmin):
+class RecipeAdmin(admin.ModelAdmin):
     list_display = (
         'id',
         'author',
@@ -39,7 +50,11 @@ class RecipeAdmin(ModelAdmin):
     ingredients.short_description = 'Ингредиенты'
 
 
-site.register(Recipe, RecipeAdmin)
-site.register(Ingredient, IngredientAdmin)
-site.register(AmountIngredient)
-site.register(Tag)
+admin.site.register(Recipe, RecipeAdmin)
+admin.site.register(Favorite)
+admin.site.register(Ingredient, IngredientAdmin)
+admin.site.register(IngredientAmount)
+admin.site.register(ShoppingList)
+admin.site.register(Tag)
+admin.site.register(CustomUser, CustomUserAdmin)
+admin.site.register(Follow)
