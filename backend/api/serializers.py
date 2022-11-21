@@ -7,6 +7,8 @@ from drf_extra_fields.fields import Base64ImageField
 from rest_framework.serializers import (ModelSerializer, SerializerMethodField,
                                         ValidationError)
 
+from foodgram.settings import (INGREDIENTS_MIN_AMOUNT,
+                               INGREDIENTS_MIN_AMOUNT_ERROR)
 from recipes.models import AmountIngredient, Ingredient, Recipe, Tag
 
 User = get_user_model()
@@ -124,6 +126,15 @@ class RecipeSerializer(ModelSerializer):
             'is_favorite',
             'is_shopping_cart',
         )
+
+    def validate(self, data):
+        for ingredient in self.initial_data.get('ingredients'):
+            if int(ingredient['amount']) < INGREDIENTS_MIN_AMOUNT:
+                raise ValidationError(
+                    INGREDIENTS_MIN_AMOUNT_ERROR.format(
+                        min_amount=INGREDIENTS_MIN_AMOUNT,
+                    )
+                )
 
     def get_ingredients(self, obj):
         return obj.ingredients.values(
