@@ -1,5 +1,3 @@
-from urllib.parse import unquote
-
 from django_filters.rest_framework import (BooleanFilter, CharFilter,
                                            FilterSet,
                                            ModelMultipleChoiceFilter)
@@ -9,29 +7,11 @@ from recipes.models import Tag, Ingredient
 
 
 class IngredientSearchFilter(FilterSet):
-    name = CharFilter(method='search_by_name')
+    name = CharFilter(field_name="name", lookup_expr='icontains')
 
     class Meta:
         model = Ingredient
-        fields = ('name',)
-
-    def search_by_name(self, queryset, name, value):
-        if value:
-            if value[0] == '%':
-                value = unquote(value)
-            else:
-                value = value.translate(
-                    'qwertyuiop[]asdfghjkl;\'zxcvbnm,./',
-                    'йцукенгшщзхъфывапролджэячсмитьбю.'
-                )
-            value = value.lower()
-            stw_queryset = list(queryset.filter(name__startswith=value))
-            cnt_queryset = queryset.filter(name__contains=value)
-            stw_queryset.extend(
-                [i for i in cnt_queryset if i not in stw_queryset]
-            )
-            queryset = stw_queryset
-        return queryset
+        fields = ('name', )
 
 
 class RecipeFilter(FilterSet):
