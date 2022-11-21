@@ -3,15 +3,16 @@ from string import hexdigits
 from django.contrib.auth import get_user_model
 from django.db.transaction import atomic
 from drf_extra_fields.fields import Base64ImageField
-from rest_framework.serializers import (IntegerField, ModelSerializer,
+from foodgram.settings import (INGREDIENTS_MIN_AMOUNT,
+                               INGREDIENTS_MIN_AMOUNT_ERROR)
+from recipes.models import (AmountIngredient, Favorite, Follow, Ingredient,
+                            Recipe, Tag)
+from rest_framework.serializers import (CurrentUserDefault, IntegerField,
+                                        ModelSerializer,
                                         PrimaryKeyRelatedField,
                                         SerializerMethodField,
                                         SlugRelatedField, ValidationError)
 from rest_framework.validators import UniqueTogetherValidator
-
-from foodgram.settings import (INGREDIENTS_MIN_AMOUNT,
-                               INGREDIENTS_MIN_AMOUNT_ERROR)
-from recipes.models import AmountIngredient, Favorite, Ingredient, Recipe, Tag
 
 User = get_user_model()
 
@@ -71,6 +72,74 @@ class AddAmountIngredientSerializer(ModelSerializer):
         fields = ('amount', 'id')
 
 
+class UserFollowSerializer(ModelSerializer):
+    following = SlugRelatedField(
+        queryset=User.objects.all(),
+        slug_field='id',
+    )
+    user = SlugRelatedField(
+        queryset=User.objects.all(),
+        slug_field='id',
+        default=CurrentUserDefault()
+    )
+
+    class Meta:
+        fields = '__all__'
+        model = Follow
+        validators = [
+            UniqueTogetherValidator(
+                queryset=Follow.objects.all(),
+                fields=('user', 'following'),
+                message='Вы уже подписаны'
+            )
+        ]
+
+    def to_representation(self, instance):
+        return FollowListSerializer(
+            instance.following,
+            context={'request': self.context.get('request')}
+        ).data
+
+
+class FollowListSerializer(ModelSerializer):
+    recipes = SerializerMethodField()
+    recipes_count = SerializerMethodField()
+    is_subscribed = SerializerMethodField()
+
+    class Meta:
+        model = User
+        fields = (
+            'email',
+            'id',
+            'username',
+            'first_name',
+            'last_name',
+            'is_subscribed',
+            'recipes',
+            'recipes_count',
+        )
+
+    def get_is_subscribed(self, user):
+        current_user = self.context.get('current_user')
+        another_user = user.following.all()
+        if user.is_anonymous or another_user.count() == 0:
+            return False
+        if Follow.objects.filter(user=user, following=current_user).exists():
+            return True
+        return False
+
+    def get_recipes(self, obj):
+        recipes = obj.recipes.all()[:3]
+        return RecipeImageSerializer(
+            recipes,
+            context={'request': self.context.get('request')},
+            many=True,
+        ).data
+
+    def get_count_recipes(self, obj):
+        return obj.recipes.count()
+
+
 class UserSerializer(ModelSerializer):
     is_subscribed = SerializerMethodField()
 
@@ -85,14 +154,13 @@ class UserSerializer(ModelSerializer):
             'is_subscribed',
             'password',
         )
-        read_only_fields = 'is_subscribed',
         extra_kwargs = {'password': {'write_only': True}}
 
     def get_is_subscribed(self, obj):
-        user = self.context.get('request').user
-        if user.is_anonymous or (user == obj):
+        request = self.context.get('request')
+        if request is None or request.user.is_anonymous:
             return False
-        return user.subscribes.filter(id=obj.id).exists()
+        return Follow.objects.filter(following=obj, user=request.user).exists()
 
     def create(self, validated_data):
         user = User(
@@ -113,28 +181,6 @@ class ShortRecipeSerializer(ModelSerializer):
         read_only_fields = '__all__',
 
 
-class UserSubscribeSerializer(UserSerializer):
-    recipes = ShortRecipeSerializer(many=True, read_only=True)
-    recipes_count = SerializerMethodField()
-
-    class Meta:
-        model = User
-        fields = (
-            'email',
-            'id',
-            'username',
-            'first_name',
-            'last_name',
-            'is_subscribed',
-            'recipes',
-            'recipes_count',
-        )
-        read_only_fields = '__all__',
-
-    def get_recipes_count(self, obj):
-        return obj.recipes.count()
-
-
 class FavoriteSerializer(ModelSerializer):
 
     class Meta:
@@ -147,6 +193,17 @@ class FavoriteSerializer(ModelSerializer):
                 message='Рецепт уже в избранном'
             )
         ]
+
+
+class RecipeImageSerializer(ModelSerializer):
+    image = SerializerMethodField()
+
+    class Meta:
+        model = Recipe
+        fields = ('id', 'name', 'image', 'cooking_time')
+
+    def get_image(self, obj):
+        return self.context.get('request').build_absolute_uri(obj.image.url)
 
 
 class RecipeSerializer(ModelSerializer):
@@ -209,6 +266,7 @@ class RecipeSerializer(ModelSerializer):
 
 
 class RecipeFullSerializer(ModelSerializer):
+    image = Base64ImageField(use_url=True, max_length=None)
     author = UserSerializer(read_only=True)
     ingredients = AddAmountIngredientSerializer(many=True)
     tags = PrimaryKeyRelatedField(

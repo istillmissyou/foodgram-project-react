@@ -4,7 +4,6 @@ from django.db.models import (CASCADE, CharField, DateTimeField, EmailField,
                               ForeignKey, ImageField, ManyToManyField, Model,
                               PositiveSmallIntegerField, SlugField, TextField,
                               UniqueConstraint)
-
 from foodgram.settings import (MAX_LEN_RECIPES_CHARFIELD,
                                MAX_LEN_USERS_CHARFIELD)
 
@@ -15,17 +14,31 @@ class User(AbstractUser):
     first_name = CharField(max_length=MAX_LEN_USERS_CHARFIELD)
     last_name = CharField(max_length=MAX_LEN_USERS_CHARFIELD)
     password = CharField(max_length=MAX_LEN_USERS_CHARFIELD)
-    subscribe = ManyToManyField(
-        to='self',
-        symmetrical=False,
-        related_name='subscribes',
-    )
 
     class Meta:
         ordering = ['username']
 
     def __str__(self):
         return f'{self.username}: {self.email}'
+
+
+class Follow(Model):
+    following = ForeignKey(
+        User,
+        on_delete=CASCADE,
+        related_name='following'
+    )
+    user = ForeignKey(
+        User,
+        on_delete=CASCADE,
+        related_name='follower'
+    )
+
+    class Meta:
+        UniqueConstraint(fields=['following', 'user'], name='follow_unique')
+
+    def __str__(self):
+        return f"{self.user} follows {self.following}"
 
 
 class Tag(Model):

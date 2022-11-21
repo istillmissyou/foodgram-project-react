@@ -4,6 +4,8 @@ from django.shortcuts import get_object_or_404
 from django.utils import timezone
 from django_filters.rest_framework.backends import DjangoFilterBackend
 from djoser.views import UserViewSet
+from foodgram.settings import DATE_TIME_FORMAT
+from recipes.models import AmountIngredient, Favorite, Ingredient, Recipe, Tag
 from rest_framework.decorators import action
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
@@ -12,16 +14,13 @@ from rest_framework.status import (HTTP_201_CREATED, HTTP_204_NO_CONTENT,
 from rest_framework.views import APIView
 from rest_framework.viewsets import ModelViewSet, ReadOnlyModelViewSet
 
-from foodgram.settings import DATE_TIME_FORMAT
-from recipes.models import AmountIngredient, Favorite, Ingredient, Recipe, Tag
-
 from .filters import IngredientSearchFilter, RecipeFilter
 from .mixins import AddDelViewMixin
 from .paginators import PageLimitPagination
 from .permissions import IsAdminOrReadOnly, IsAuthorOrAdminOrModerator
 from .serializers import (FavoriteSerializer, IngredientSerializer,
                           RecipeFullSerializer, RecipeSerializer,
-                          TagSerializer, UserSubscribeSerializer)
+                          TagSerializer, UserFollowSerializer)
 
 
 class TagViewSet(ReadOnlyModelViewSet):
@@ -32,7 +31,7 @@ class TagViewSet(ReadOnlyModelViewSet):
 
 class CustomUserViewSet(UserViewSet, AddDelViewMixin):
     pagination_class = PageLimitPagination
-    add_serializer = UserSubscribeSerializer
+    add_serializer = UserFollowSerializer
 
     @action(methods=('get', 'post'), detail=True)
     def subscribe(self, request, id):
@@ -44,7 +43,7 @@ class CustomUserViewSet(UserViewSet, AddDelViewMixin):
             return Response(status=HTTP_401_UNAUTHORIZED)
         authors = user.subscribe.all()
         pages = self.paginate_queryset(authors)
-        serializer = UserSubscribeSerializer(
+        serializer = UserFollowSerializer(
             pages, context={'request': request}, many=True,
         )
         return self.get_paginated_response(serializer.data)
@@ -56,6 +55,7 @@ class IngredientViewSet(ReadOnlyModelViewSet):
     permission_classes = [IsAdminOrReadOnly]
     filter_backends = (DjangoFilterBackend,)
     filterset_class = IngredientSearchFilter
+    pagination_class = None
 
 
 class FavoriteApiView(APIView):

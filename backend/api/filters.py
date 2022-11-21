@@ -1,37 +1,16 @@
-from urllib.parse import unquote
-
 from django_filters.rest_framework import (BooleanFilter, CharFilter,
                                            FilterSet,
                                            ModelMultipleChoiceFilter)
-
 from foodgram.settings import FALSE_SEARCH, TRUE_SEARCH
 from recipes.models import Ingredient, Tag
 
 
 class IngredientSearchFilter(FilterSet):
-    name = CharFilter(method='search_by_name')
+    name = CharFilter(field_name='name', lookup_expr='icontains')
 
     class Meta:
         model = Ingredient
         fields = ('name',)
-
-    def search_by_name(self, queryset, name, value):
-        if value:
-            if value[0] == '%':
-                value = unquote(value)
-            else:
-                value = value.translate(
-                    'qwertyuiop[]asdfghjkl;\'zxcvbnm,./',
-                    'йцукенгшщзхъфывапролджэячсмитьбю.'
-                )
-            value = value.lower()
-            stw_queryset = list(queryset.filter(name__startswith=value))
-            cnt_queryset = queryset.filter(name__contains=value)
-            stw_queryset.extend(
-                [i for i in cnt_queryset if i not in stw_queryset]
-            )
-            queryset = stw_queryset
-        return queryset
 
 
 class RecipeFilter(FilterSet):
@@ -46,13 +25,6 @@ class RecipeFilter(FilterSet):
     is_favorited = BooleanFilter(
         method='get_is_favorited',
     )
-
-    def get_tags(self, queryset, name, value):
-        if value:
-            return queryset.filter(
-                tags__slug__in=self.request.query_params.get('tags'),
-            ).distinct()
-        return queryset
 
     def get_is_in_shopping_cart(self, queryset, name, value):
         is_in_shopping = self.request.query_params.get('is_in_shopping_cart'),
