@@ -128,18 +128,13 @@ class RecipeSerializer(ModelSerializer):
         )
 
     def validate(self, data):
-        ingredients_id = []
-        for ingredient in data['ingredients']:
-            if int(ingredient['amount']) <= INGREDIENTS_MIN_AMOUNT:
+        for ingredient in data.pop('ingredients'):
+            if int(ingredient['amount']) < INGREDIENTS_MIN_AMOUNT:
                 raise ValidationError(
                     INGREDIENTS_MIN_AMOUNT_ERROR.format(
                         min_amount=INGREDIENTS_MIN_AMOUNT,
                     )
                 )
-            ingredients_id.append(ingredient['id'])
-        if len(ingredients_id) > len(set(ingredients_id)):
-            raise ValidationError('Ингредиенты не должны повторяться')
-        return data
 
     def get_ingredients(self, obj):
         return obj.ingredients.values(
