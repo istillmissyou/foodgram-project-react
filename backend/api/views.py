@@ -7,8 +7,7 @@ from rest_framework.decorators import action
 from rest_framework.response import Response
 from rest_framework.status import HTTP_400_BAD_REQUEST, HTTP_401_UNAUTHORIZED
 from rest_framework.viewsets import ModelViewSet, ReadOnlyModelViewSet
-from urllib.parse import unquote
-from .filters import RecipeFilter
+from .filters import RecipeFilter, IngredientSearchFilter
 from foodgram.settings import DATE_TIME_FORMAT
 from .mixins import AddDelViewMixin
 from .paginators import PageLimitPagination
@@ -51,27 +50,9 @@ class IngredientViewSet(ReadOnlyModelViewSet):
     queryset = Ingredient.objects.all()
     serializer_class = IngredientSerializer
     permission_classes = [IsAdminOrReadOnly]
+    filter_backends = [DjangoFilterBackend, ]
+    filter_class = IngredientSearchFilter
     pagination_class = None
-
-    def get_queryset(self):
-        name = self.request.query_params.get('name')
-        queryset = self.queryset
-        if name:
-            if name[0] == '%':
-                name = unquote(name)
-            else:
-                name = name.translate(str.maketrans(
-                    'qwertyuiop[]asdfghjkl;\'zxcvbnm,./',
-                    'йцукенгшщзхъфывапролджэячсмитьбю.'
-                ))
-            name = name.lower()
-            stw_queryset = list(queryset.filter(name__startswith=name))
-            cnt_queryset = queryset.filter(name__contains=name)
-            stw_queryset.extend(
-                [i for i in cnt_queryset if i not in stw_queryset]
-            )
-            queryset = stw_queryset
-        return queryset
 
 
 class RecipeViewSet(ModelViewSet, AddDelViewMixin):
