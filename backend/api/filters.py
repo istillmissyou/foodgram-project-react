@@ -1,17 +1,14 @@
-from django_filters.rest_framework import (BooleanFilter, CharFilter,
+from django_filters.rest_framework import (BooleanFilter,
                                            FilterSet,
                                            ModelMultipleChoiceFilter)
+from rest_framework.filters import SearchFilter
 
 from foodgram.settings import FALSE_SEARCH, TRUE_SEARCH
-from recipes.models import Tag, Ingredient
+from recipes.models import Tag
 
 
-class IngredientSearchFilter(FilterSet):
-    name = CharFilter(field_name='name', lookup_expr='istartswith')
-
-    class Meta:
-        model = Ingredient
-        fields = ('name', )
+class IngredientSearchFilter(SearchFilter):
+    search_param = 'name'
 
 
 class RecipeFilter(FilterSet):
