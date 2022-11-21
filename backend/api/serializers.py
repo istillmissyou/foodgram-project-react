@@ -1,4 +1,5 @@
 from string import hexdigits
+from django.db.transaction import atomic
 
 from django.contrib.auth import get_user_model
 from django.db.models import F
@@ -157,6 +158,7 @@ class RecipeSerializer(ModelSerializer):
             recipe.tags.set(tag)
         return recipe
 
+    @atomic
     def create(self, validated_data):
         saved = {}
         saved['ingredients'] = validated_data.pop('ingredients')
@@ -167,6 +169,7 @@ class RecipeSerializer(ModelSerializer):
         )
         return self.create_ingredients_and_tags(recipe, saved)
 
+    @atomic
     def update(self, recipe, validated_data):
         recipe.tags.clear()
         recipe.ingredients.clear()
