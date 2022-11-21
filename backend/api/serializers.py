@@ -135,6 +135,7 @@ class RecipeSerializer(ModelSerializer):
                         min_amount=INGREDIENTS_MIN_AMOUNT,
                     )
                 )
+        return data
 
     def get_ingredients(self, obj):
         return obj.ingredients.values(
