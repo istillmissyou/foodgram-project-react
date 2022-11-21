@@ -1,23 +1,53 @@
 from rest_framework.permissions import (SAFE_METHODS, BasePermission,
-                                        IsAuthenticated)
+                                        IsAuthenticatedOrReadOnly)
 
 
-class IsOwnerProfile(IsAuthenticated):
+class IsAdminOrReadOnly(BasePermission):
+    def has_permission(self, request, view):
+        return (
+            request.method in SAFE_METHODS
+            or request.user.is_authenticated and request.user.is_admin
+        )
 
     def has_object_permission(self, request, view, obj):
-        return obj.user == request.user
-
-
-class IsAdmin(BasePermission):
-    def has_permission(self, request, view):
-        return request.user.is_authenticated and (
-            request.user.is_staff
+        return (
+            request.method in SAFE_METHODS
+            or request.user.is_authenticated
+            and request.user.is_admin
         )
 
 
-class IsOwnerOrReadOnly(BasePermission):
+class AuthorStaffOrReadOnly(IsAuthenticatedOrReadOnly):
+    def has_object_permission(self, request, view, obj):
+        return (
+            request.method in ('GET',)
+            or (request.user == obj.author)
+            or request.user.is_staff
+        )
+
+
+class IsAuthorOrAdminOrModerator(BasePermission):
+    def has_permission(self, request, view):
+        return (
+            request.method in SAFE_METHODS
+            or request.user.is_authenticated
+        )
 
     def has_object_permission(self, request, view, obj):
-        if request.method in SAFE_METHODS:
-            return True
-        return obj.author == request.user
+        return (
+            request.method in SAFE_METHODS
+            or request.user.is_authenticated
+            and obj.author == request.user
+            or request.user.is_admin
+            or request.user.is_moderator
+            or request.user.is_staff
+        )
+
+
+class OwnerUserOrReadOnly(IsAuthenticatedOrReadOnly):
+    def has_object_permission(self, request, view, obj):
+        return (
+            request.method in ('GET',)
+            or (request.user == obj)
+            or request.user.is_admin
+        )
