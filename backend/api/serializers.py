@@ -2,7 +2,6 @@ from string import hexdigits
 
 from django.contrib.auth import get_user_model
 from django.db.models import F
-from django.shortcuts import get_object_or_404
 from drf_extra_fields.fields import Base64ImageField
 from rest_framework.serializers import (ModelSerializer, SerializerMethodField,
                                         ValidationError)
@@ -150,7 +149,7 @@ class RecipeSerializer(ModelSerializer):
         recipe.ingredients.set(AmountIngredient.objects.bulk_create([
             AmountIngredient(
                 recipe=recipe,
-                ingredients=get_object_or_404(Ingredient, pk=ingredient['id']),
+                ingredients=ingredient['id'],
                 amount=ingredient['amount'],
             ) for ingredient in ingredients
         ]))
