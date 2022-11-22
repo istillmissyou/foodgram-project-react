@@ -105,3 +105,5 @@ create_models('../data/ingredients.csv', Ingredient, True)
 Чтобы открыть документацию локально, запустите сервер и перейдите по ссылке:
 [http://127.0.0.1/api/docs/](http://127.0.0.1/api/docs/)
 
+## Автор
+Штунь Данил
