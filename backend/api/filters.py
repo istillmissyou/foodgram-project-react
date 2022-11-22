@@ -1,5 +1,17 @@
 from django_filters import rest_framework as filters
+
 from recipes.models import Ingredient, Recipe, Tag
+
+
+class IngredientFilter(filters.FilterSet):
+    name = filters.CharFilter(
+        field_name='name',
+        lookup_expr='istartswith'
+    )
+
+    class Meta:
+        model = Ingredient
+        fields = ('name', 'measurement_unit')
 
 
 class RecipeFilter(filters.FilterSet):
@@ -7,15 +19,16 @@ class RecipeFilter(filters.FilterSet):
         field_name='tags__slug',
         to_field_name='slug',
         queryset=Tag.objects.all(),
-        label='Tags'
+        label='Tags',
     )
     author = filters.CharFilter(
         field_name='author__id',
-        lookup_expr='icontains'
+        lookup_expr='icontains',
     )
     is_favorited = filters.BooleanFilter(method='filter_is_favorited')
     is_in_shopping_cart = filters.BooleanFilter(
-        method='filter_is_in_shopping_cart')
+        method='filter_is_in_shopping_cart',
+    )
 
     class Meta:
         model = Recipe
@@ -32,14 +45,3 @@ class RecipeFilter(filters.FilterSet):
                 shopping_cart_recipe__user=self.request.user
             )
         return queryset
-
-
-class IngredientFilter(filters.FilterSet):
-    name = filters.CharFilter(
-        field_name='name',
-        lookup_expr='istartswith'
-    )
-
-    class Meta:
-        model = Ingredient
-        fields = ('name', 'measurement_unit')
