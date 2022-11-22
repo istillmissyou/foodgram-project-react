@@ -2,77 +2,20 @@ from django.db.models import Sum
 from django.http import HttpResponse
 from django.shortcuts import get_object_or_404
 from django_filters.rest_framework import DjangoFilterBackend
-from djoser.views import UserViewSet as DjoserUserViewSet
 from rest_framework import status, viewsets
 from rest_framework.decorators import action
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 
 from recipes.models import (Favorites, Ingredient, IngredientInRecipe, Recipe,
-                            ShoppingCart, Subscription, Tag, User)
+                            ShoppingCart, Tag)
 
 from .filters import IngredientFilter, RecipeFilter
 from .paginators import PageLimitPagination
 from .permissions import IsAdminOrReadOnly, IsAuthorOrReadOnly
-from .serializers import (FavoritesSerializer, FollowSerializer,
-                          IngredientSerializer, RecipeCreateSerializer,
-                          RecipeViewSerializer, ShoppingCartSerializer,
-                          SubscriptionSerializer, TagSerializer)
-
-
-class CustomUserViewSet(DjoserUserViewSet):
-    pagination_class = PageLimitPagination
-    lookup_field = 'id'
-    search_fields = ('username',)
-
-    @action(
-        methods=('get',),
-        url_path='me',
-        detail=False,
-        permission_classes=(IsAuthenticated,)
-    )
-    def get_self_page(self, request):
-        serializer = self.get_serializer(request.user)
-        return Response(serializer.data, status=status.HTTP_200_OK)
-
-    @action(
-        methods=('get',),
-        url_path='subscriptions',
-        detail=False,
-        permission_classes=(IsAuthenticated,)
-    )
-    def get_subscriptions(self, request):
-        queryset = self.paginate_queryset(
-            User.objects.filter(following__user=request.user)
-        )
-        serializer = SubscriptionSerializer(
-            queryset,
-            many=True,
-            context={'request': request}
-        )
-        return self.get_paginated_response(serializer.data)
-
-    @action(
-        methods=('post', 'delete'),
-        url_path='subscribe',
-        detail=True,
-        permission_classes=(IsAuthenticated,),
-    )
-    def subscribe(self, request, id):
-        user = request.user
-        author = get_object_or_404(User, id=id)
-        if request.method == 'POST':
-            data = {'user': user.id, 'author': id}
-            serializer = FollowSerializer(
-                data=data,
-                context={'request': request}
-            )
-            serializer.is_valid(raise_exception=True)
-            serializer.save()
-            return Response(serializer.data, status=status.HTTP_201_CREATED)
-        following = get_object_or_404(Subscription, user=user, author=author)
-        following.delete()
-        return Response(status=status.HTTP_204_NO_CONTENT)
+from .serializers import (FavoritesSerializer, IngredientSerializer,
+                          RecipeCreateSerializer, RecipeViewSerializer,
+                          ShoppingCartSerializer, TagSerializer)
 
 
 class TagsViewSet(viewsets.ReadOnlyModelViewSet):

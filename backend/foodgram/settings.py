@@ -25,6 +25,7 @@ INSTALLED_APPS = [
     'django_filters',
     'api',
     'recipes',
+    'users',
 ]
 
 MIDDLEWARE = [
@@ -86,7 +87,7 @@ AUTH_PASSWORD_VALIDATORS = [
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
-AUTH_USER_MODEL = 'recipes.User'
+AUTH_USER_MODEL = 'users.User'
 
 LANGUAGE_CODE = 'en-us'
 
