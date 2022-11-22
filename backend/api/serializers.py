@@ -177,16 +177,11 @@ class RecipeCreateSerializer(ModelSerializer):
         return data
 
     def create_bulk_ingredients(recipe, ingredients):
-        IngredientInRecipe.objects.bulk_create(
-            [
-                IngredientInRecipe(
-                    recipe=recipe,
-                    amount=ingredient['amount'],
-                    ingredient=ingredient['id'],
-                )
-                for ingredient in ingredients
-            ]
-        )
+        IngredientInRecipe.objects.bulk_create([IngredientInRecipe(
+            ingredient=ingredient['id'],
+            recipe=recipe,
+            amount=ingredient['amount']
+        ) for ingredient in ingredients])
 
     def create(self, validated_data):
         request = self.context.get('request')
