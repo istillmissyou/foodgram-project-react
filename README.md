@@ -7,6 +7,10 @@ Cервис для публикаций и обмена рецептами.
 
 http://51.250.97.176
 
+Вход в админку:
+login: shtun
+password: dada123!
+
 ## Стек технологий
 Python 3.10.16, Django 3.2.16, Django REST Framework 3.12.4, PostgresQL, Docker, Yandex.Cloud.
 
