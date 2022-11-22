@@ -1,5 +1,5 @@
 from djoser.serializers import UserCreateSerializer, UserSerializer
-from rest_framework import serializers
+from rest_framework.serializers import SerializerMethodField
 
 from .models import User
 
@@ -19,9 +19,9 @@ class CustomUserCreateSerializer(UserCreateSerializer):
 
 
 class CustomUserSerializer(UserSerializer):
-    is_subscribed = serializers.SerializerMethodField(
+    is_subscribed = SerializerMethodField(
         read_only=True,
-        source='get_is_subscribed'
+        source='get_is_subscribed',
     )
 
     class Meta:

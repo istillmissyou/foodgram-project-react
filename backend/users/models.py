@@ -1,7 +1,6 @@
 from django.contrib.auth.models import AbstractUser
 from django.db.models import (CASCADE, CharField, EmailField, ForeignKey,
                               Model, UniqueConstraint)
-
 from foodgram.settings import MAX_LEN_USERS_CHARFIELD
 
 
