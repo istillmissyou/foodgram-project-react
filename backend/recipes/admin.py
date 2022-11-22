@@ -1,75 +1,67 @@
-from django.contrib.admin import ModelAdmin, TabularInline, register, site
-from django.utils.safestring import mark_safe
+from django.contrib import admin
 
-from .models import AmountIngredient, Ingredient, Recipe, Tag
-
-site.site_header = 'Администрирование Foodgram'
-EMPTY_VALUE_DISPLAY = 'Значение не указано'
+from .models import (Favorites, Ingredient, IngredientInRecipe, Recipe,
+                     ShoppingCart, Tag, TagInRecipe)
 
 
-class IngredientInline(TabularInline):
-    model = AmountIngredient
-    extra = 2
+class DisplayEmptyFieldMixin(admin.ModelAdmin):
+    empty_value_display = '-пусто-'
 
 
-@register(AmountIngredient)
-class LinksAdmin(ModelAdmin):
-    pass
+class IngredientInRecipeInline(admin.TabularInline):
+    model = IngredientInRecipe
+    extra = 1
 
 
-@register(Ingredient)
-class IngredientAdmin(ModelAdmin):
+class TagInRecipeInline(admin.TabularInline):
+    model = TagInRecipe
+    extra = 1
+
+
+@admin.register(Ingredient)
+class IngredientAdmin(DisplayEmptyFieldMixin, admin.ModelAdmin):
+    list_display = ('name', 'measurement_unit',)
+    search_fields = ('name',)
+    list_filter = ('measurement_unit',)
+
+
+@admin.register(Tag)
+class TagAdmin(DisplayEmptyFieldMixin, admin.ModelAdmin):
+    list_display = ('name', 'color', 'slug',)
+    search_fields = ('name',)
+    list_filter = ('name',)
+
+
+@admin.register(Recipe)
+class RecipeAdmin(DisplayEmptyFieldMixin, admin.ModelAdmin):
     list_display = (
-        'name', 'measurement_unit',
-    )
-    search_fields = (
+        'id',
+        'author',
         'name',
+        'text',
+        'cooking_time',
+        'pub_date',
+        'count_favorite'
     )
-    list_filter = (
-        'name',
-    )
+    search_fields = ('author__username', 'name',)
+    list_filter = ('name', 'author', 'tags',)
+    readonly_fields = ('count_favorite',)
+    inlines = (IngredientInRecipeInline, TagInRecipeInline)
+    exclude = ('tags', 'ingredients')
 
-    save_on_top = True
-    empty_value_display = EMPTY_VALUE_DISPLAY
-
-
-@register(Recipe)
-class RecipeAdmin(ModelAdmin):
-    list_display = (
-        'name', 'author', 'get_image',
-    )
-    fields = (
-        ('name', 'cooking_time',),
-        ('author', 'tags',),
-        ('text',),
-        ('image',),
-    )
-    raw_id_fields = ('author', )
-    search_fields = (
-        'name', 'author',
-    )
-    list_filter = (
-        'name', 'author',
-    )
-
-    inlines = (IngredientInline,)
-    save_on_top = True
-    empty_value_display = EMPTY_VALUE_DISPLAY
-
-    def get_image(self, obj):
-        return mark_safe(f'<img src={obj.image.url} width="80" hieght="30"')
-
-    get_image.short_description = 'Изображение'
+    def count_favorite(self, obj):
+        return obj.favorite_recipe.count()
 
 
-@register(Tag)
-class TagAdmin(ModelAdmin):
-    list_display = (
-        'name', 'color', 'slug',
-    )
-    search_fields = (
-        'name', 'color'
-    )
+@admin.register(Favorites)
+class FavoritesAdmin(DisplayEmptyFieldMixin, admin.ModelAdmin):
+    list_display = ('user', 'recipe',)
+    search_fields = ('user',)
+    list_filter = ('user',)
 
-    save_on_top = True
-    empty_value_display = EMPTY_VALUE_DISPLAY
+
+@admin.register(ShoppingCart)
+class ShoppingCartAdmin(DisplayEmptyFieldMixin, admin.ModelAdmin):
+    list_display = ('user', 'recipe',)
+    search_fields = ('user',)
+    list_filter = ('user',)

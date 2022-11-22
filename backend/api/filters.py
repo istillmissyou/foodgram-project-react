@@ -1,56 +1,46 @@
-from django_filters.rest_framework import (BooleanFilter,
-                                           FilterSet,
-                                           ModelMultipleChoiceFilter)
-from rest_framework.filters import SearchFilter
+from django_filters import rest_framework as filters
 
-from foodgram.settings import FALSE_SEARCH, TRUE_SEARCH
-from recipes.models import Tag
+from recipes.models import Ingredient, Recipe, Tag
 
 
-class IngredientSearchFilter(SearchFilter):
-    search_param = 'name'
-
-
-class RecipeFilter(FilterSet):
-    tags = ModelMultipleChoiceFilter(
+class RecipeFilter(filters.FilterSet):
+    tags = filters.ModelMultipleChoiceFilter(
         field_name='tags__slug',
-        queryset=Tag.objects.all(),
         to_field_name='slug',
+        queryset=Tag.objects.all(),
+        label='Tags'
     )
-    is_in_shopping_cart = BooleanFilter(
-        method='get_is_in_shopping_cart',
+    author = filters.CharFilter(
+        field_name='author__id',
+        lookup_expr='icontains'
     )
-    is_favorited = BooleanFilter(
-        method='get_is_favorited',
-    )
+    is_favorited = filters.BooleanFilter(method='filter_is_favorited')
+    is_in_shopping_cart = filters.BooleanFilter(
+        method='filter_is_in_shopping_cart')
 
-    def get_tags(self, queryset, name, value):
+    class Meta:
+        model = Recipe
+        fields = ('tags', 'author', 'is_favorited', 'is_in_shopping_cart')
+
+    def filter_is_favorited(self, queryset, name, value):
+        if value:
+            return queryset.filter(favorite_recipe__user=self.request.user)
+        return queryset
+
+    def filter_is_in_shopping_cart(self, queryset, name, value):
         if value:
             return queryset.filter(
-                tags__slug__in=self.request.query_params.get('tags'),
-            ).distinct()
+                shopping_cart_recipe__user=self.request.user
+            )
         return queryset
 
-    def get_is_in_shopping_cart(self, queryset, name, value):
-        is_in_shopping = self.request.query_params.get('is_in_shopping_cart'),
-        if (user := self.request.user).is_anonymous:
-            return queryset
-        if value:
-            if is_in_shopping in TRUE_SEARCH:
-                queryset = queryset.filter(cart=user.id)
-            if is_in_shopping in FALSE_SEARCH:
-                queryset = queryset.exclude(cart=user.id)
-            return queryset
-        return queryset
 
-    def get_is_favorited(self, queryset, name, value):
-        is_favorited = self.request.query_params.get('is_favorited')
-        if (user := self.request.user).is_anonymous:
-            return queryset
-        if value:
-            if is_favorited in TRUE_SEARCH:
-                queryset = queryset.filter(favorite=user.id)
-            if is_favorited in FALSE_SEARCH:
-                queryset = queryset.exclude(favorite=user.id)
-            return queryset
-        return queryset
+class IngredientFilter(filters.FilterSet):
+    name = filters.CharFilter(
+        field_name='name',
+        lookup_expr='istartswith'
+    )
+
+    class Meta:
+        model = Ingredient
+        fields = ('name', 'measurement_unit')
